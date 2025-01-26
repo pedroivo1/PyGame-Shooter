@@ -13,6 +13,12 @@ class Game():
         self.clock = pygame.time.Clock()
         self.fps = 60
 
+        self.colors = {
+            'bg': (144, 201, 120),
+            'red': (210, 60, 40),
+            'gray': (60, 60, 60)
+        }
+
         self.player = soldier.Player(200, 200, 2, 0.3)
         self.enemy = soldier.Enemy(500, 200, 2, 0.3)
 
@@ -20,34 +26,42 @@ class Game():
     def event_update(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("\033[92mGame ended clean.\033[0m\n")
+                print("\033[92mThe game has closed successfully.\033[0m\n")
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("\033[92mGame ended clean.\033[0m\n")
+                    print("\033[92mThe game has closed successfully.\033[0m\n")
                     pygame.quit()
                     sys.exit()
 
                 if event.key == pygame.K_a:
-                    self.player.moving_left = True
-                elif event.key == pygame.K_d:
-                    self.player.moving_right = True
-                elif event.key == pygame.K_w:
-                    self.player.jump = True
+                    self.player.runing_left = True
+                    self.player.runing_right = False
+                    self.player.action_update('run')
+                if event.key == pygame.K_d:
+                    self.player.runing_right = True
+                    self.player.runing_left = False
+                    self.player.action_update('run')
+                if event.key == pygame.K_w and not self.player.in_air:
+                    self.player.jumped = True
+                    self.player.action_update('jump')
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_a:
-                    self.player.moving_left = False
-                elif event.key == pygame.K_d:
-                    self.player.moving_right = False
-                elif event.key == pygame.K_w:
-                    self.player.jump = False
+                    self.player.runing_left = False
+                    if not self.player.runing_right:
+                        self.player.action_update('idle')
+                if event.key == pygame.K_d:
+                    self.player.runing_right = False
+                    if not self.player.runing_left:
+                        self.player.action_update('idle')
 
 
     def draw_background(self):
-        self.screen.fill((60, 60, 60))
+        self.screen.fill(self.colors['bg'])
+        pygame.draw.line(self.screen, self.colors['red'], (0, 300), (800, 300))
 
 
     def screen_update(self):
@@ -64,6 +78,7 @@ class Game():
         while True:
             dt = self.clock.tick(self.fps)
             self.event_update()
+            self.player.animation_update()
             self.player.move(dt)
             self.screen_update()
 
