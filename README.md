@@ -1,3 +1,3 @@
 # PyGame-Shooter
 
-In this version, the player's movement mechanics have been fully implemented.
+In this version, we implemented the functionality for bullets, as well as the mechanical and animated interactions with the players and enemies.
