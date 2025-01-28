@@ -1,8 +1,8 @@
 import pygame
-from src.model.data import settings
+from src.model.settings import game_settings
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, confg: settings.Settings) -> None:
+    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, confg: game_settings.Settings) -> None:
         super().__init__()
         
         self.confg = confg

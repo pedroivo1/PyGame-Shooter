@@ -1,76 +1,51 @@
 import pygame
+from abc import ABC, abstractmethod
 from src.model.game import Bullet
 from src.model.game import Grenade
-from src.model.data import settings
+from src.model.settings import game_settings
+from src.model.settings import soldier_settings
+from src import default_imports
 
-class Soldier(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, ammo: int, config: settings.Settings, assets: dict, color: str):
+class Soldier(pygame.sprite.Sprite, ABC):
+    def __init__(self, x: int, y: int, ammo: int, config: game_settings.Settings, assets: dict, color: str) -> None:
         super().__init__()
 
         self.config = config
         self.assets = assets
+        self.soldier_settings = soldier_settings.SoldierConfig(**(default_imports.soldier_settings))
+        self.soldier_settings.animation.animations_map = self.assets['animations'][color]
 
-        self.x_velocity = 0.3
-        self.y_velocity = 0
-        self.direction = 1
-        self.ammo = ammo
-        self.start_ammo = ammo
-        self.health = 100
-        self.start_health = self.health
-
-        self.soldier_alive = True
-        self.running_left = False
-        self.running_right = False
-
-        self.shot = False
-        self.shot_cooldown = 250
-        self.shot_time = pygame.time.get_ticks()
-        self.threw_grenade = False
-        self.threw_grenade_cooldown = 400
-        self.threw_grenade_time = pygame.time.get_ticks()
-        self.grenades_number = 5
-
-        self.jumped = False
-        self.in_air = False
-        self.flip_image = False
-
-        self.animation_cooldown = 100
-        self.animation_time = pygame.time.get_ticks()
-        self.animation_index = 0
-        self.animation_action = "idle"
-        self.animation_dict = self.assets['animations'][color]
-
-        self.image = self.animation_dict[self.animation_action][self.animation_index]
+        self.image = self.soldier_settings.animation.animations_map[self.soldier_settings.animation.animation_action][self.soldier_settings.animation.animation_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
 
     def action_update(self, new_action: str) -> None:
-        self.animation_action = new_action
-        self.animation_index = 0
-        self.animation_time = pygame.time.get_ticks()
+        self.soldier_settings.animation.animation_action = new_action
+        self.soldier_settings.animation.animation_index = 0
+        self.soldier_settings.animation.animation_timer = pygame.time.get_ticks()
 
 
     def animation_update(self) -> None:
-        self.image = self.animation_dict[self.animation_action][self.animation_index]
-        if pygame.time.get_ticks() - self.animation_time > self.animation_cooldown:
-            self.animation_time = pygame.time.get_ticks()
-            self.animation_index = (self.animation_index + 1) % len(self.animation_dict[self.animation_action])
-            if self.animation_action == 'death':
-                if self.animation_index == 7:
-                    self.animation_index = 6
+        self.image = self.soldier_settings.animation.animations_map[self.soldier_settings.animation.animation_action][self.soldier_settings.animation.animation_index]
+        if pygame.time.get_ticks() - self.soldier_settings.animation.animation_timer > self.soldier_settings.animation.animation_cooldown:
+            self.soldier_settings.animation.animation_timer = pygame.time.get_ticks()
+            self.soldier_settings.animation.animation_index = (self.soldier_settings.animation.animation_index + 1) % len(self.soldier_settings.animation.animations_map[self.soldier_settings.animation.animation_action])
+            if self.soldier_settings.animation.animation_action == 'death':
+                if self.soldier_settings.animation.animation_index == 7:
+                    self.soldier_settings.animation.animation_index = 6
 
 
-    def draw(self, screen) -> None:
-        screen.blit(pygame.transform.flip(self.image, self.flip_image, False), self.rect)
+    def draw(self, screen: pygame.Surface) -> None:
+        screen.blit(pygame.transform.flip(self.image, self.soldier_settings.state.flip_image, False), self.rect)
 
 
     def is_soldier_alive(self) -> None:
-        if self.health <= 0:
-            self.health = 0
-            self.x_velocity = 0
-            if self.soldier_alive:
-                self.soldier_alive = False
+        if self.soldier_settings.health.health <= 0:
+            self.soldier_settings.health.health = 0
+            self.soldier_settings.movement.x_velocity = 0
+            if self.soldier_settings.state.soldier_alive:
+                self.soldier_settings.state.soldier_alive = False
                 self.action_update('death')
 
 
@@ -78,94 +53,108 @@ class Soldier(pygame.sprite.Sprite):
         dx = 0
         dy = 0
 
-        if self.running_left:
-            dx = -self.x_velocity * dt
-            self.flip_image = True
-            self.direction = -1
-        elif self.running_right:
-            dx = +self.x_velocity * dt
-            self.flip_image = False
-            self.direction = 1
+        if self.soldier_settings.state.running_left:
+            dx = -self.soldier_settings.movement.x_velocity * dt
+            self.soldier_settings.state.flip_image = True
+            self.soldier_settings.movement.direction = -1
+        elif self.soldier_settings.state.running_right:
+            dx = +self.soldier_settings.movement.x_velocity * dt
+            self.soldier_settings.state.flip_image = False
+            self.soldier_settings.movement.direction = 1
 
-        self.y_velocity += self.config.physic.gravity
-        if self.jumped:
-            self.y_velocity -= 11
-            self.jumped = False
-            self.in_air = True
+        self.soldier_settings.movement.y_velocity += self.config.physic.gravity
+        if self.soldier_settings.state.jumped:
+            self.soldier_settings.movement.y_velocity -= 11
+            self.soldier_settings.state.jumped = False
+            self.soldier_settings.state.in_air = True
 
-        dy += self.y_velocity
+        dy += self.soldier_settings.movement.y_velocity
 
         if self.rect.bottom + dy > 300:
-            self.y_velocity = 0
+            self.soldier_settings.movement.y_velocity = 0
             dy = 300 - self.rect.bottom
-            if self.in_air:
-                if self.running_left or self.running_right:
+            if self.soldier_settings.state.in_air:
+                if self.soldier_settings.state.running_left or self.soldier_settings.state.running_right:
                     self.action_update('run')
                 else:
                     self.action_update('idle')
-            self.in_air = False
+            self.soldier_settings.state.in_air = False
 
         self.rect.x += dx
         self.rect.y += dy
 
 
     def apply_gravity(self, dt: int) -> None:
-        self.y_velocity += self.config.physic.gravity * dt
-        if self.rect.bottom + self.y_velocity > 300:
-            self.y_velocity = 0
+        self.soldier_settings.movement.y_velocity += self.config.physic.gravity * dt
+        if self.rect.bottom + self.soldier_settings.movement.y_velocity > 300:
+            self.soldier_settings.movement.y_velocity = 0
             self.rect.bottom = 300
-            if self.in_air:
-                if self.running_left or self.running_right:
+            if self.soldier_settings.state.in_air:
+                if self.soldier_settings.state.running_left or self.soldier_settings.state.running_right:
                     self.action_update('run')
                 else:
                     self.action_update('idle')
-            self.in_air = False
+            self.soldier_settings.state.in_air = False
 
 
     def jump(self) -> None:
-        if not self.in_air:
-            self.y_velocity = -11
-            self.in_air = True
+        if not self.soldier_settings.state.in_air:
+            self.soldier_settings.movement.y_velocity = -11
+            self.soldier_settings.state.in_air = True
 
 
-    def shoot(self, bullets) -> None:
-        if self.shot and self.ammo and pygame.time.get_ticks() - self.shot_time > self.shot_cooldown:
-            self.shot_time = pygame.time.get_ticks()
+    def shoot(self, bullets: pygame.sprite.Group) -> None:
+        if self.soldier_settings.ammo.shot and self.soldier_settings.ammo.ammo and pygame.time.get_ticks() - self.soldier_settings.ammo.shot_time > self.soldier_settings.ammo.shot_cooldown:
+            self.soldier_settings.ammo.shot_time = pygame.time.get_ticks()
             bullet = Bullet.Bullet(
-                self.rect.centerx + self.rect.size[0] * 0.7 * self.direction,
+                self.rect.centerx + self.rect.size[0] * 0.7 * self.soldier_settings.movement.direction,
                 self.rect.centery,
-                self.direction,
+                self.soldier_settings.movement.direction,
                 self.assets['images']['bullet'],
                 self.config
             )
             bullets.add(bullet)
-            self.ammo -= 1
+            self.soldier_settings.ammo.ammo -= 1
 
-
-    def throw_grenade(self, grenades: pygame.sprite.Group) -> None:
-        if self.threw_grenade and self.grenades_number and pygame.time.get_ticks() - self.threw_grenade_time > self.threw_grenade_cooldown:
-            self.threw_grenade_time = pygame.time.get_ticks()
-            grenade = Grenade.Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.direction), self.rect.top, self.direction, self.assets['images']['grenade'], self.config)
-            grenades.add(grenade)
-            self.grenades_number -= 1
-
-
+    @abstractmethod
     def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
         self.is_soldier_alive()
-        if self.soldier_alive:
+        if self.soldier_settings.state.soldier_alive:
             self.shoot(bullets)
-            self.throw_grenade(grenades)
             self.move(dt)
         self.animation_update()
 
 
 
-class Green_soldier(Soldier):
-    def __init__(self, x: int, y: int, ammo: int, config: settings.Settings, assets: dict) -> None:
-        super().__init__(x, y, ammo, config, assets, 'green')
+class Player(Soldier):
+    def __init__(self, x: int, y: int, ammo: int, config: game_settings.Settings, assets: dict, color: str) -> None:
+        super().__init__(x, y, ammo, config, assets, color)
+        self.grenade_config = soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
+        self.grenade_config.threw_grenade = False
+        self.grenade_config.threw_grenade_cooldown = 400
+        self.grenade_config.threw_grenade_time = pygame.time.get_ticks()
+        self.grenade_config.number_of_grenades = 5
+
+
+    def throw_grenade(self, grenades: pygame.sprite.Group) -> None:
+        if self.grenade_config.threw_grenade and self.grenade_config.number_of_grenades and pygame.time.get_ticks() - self.grenade_config.threw_grenade_time > self.grenade_config.threw_grenade_cooldown:
+            self.grenade_config.threw_grenade_time = pygame.time.get_ticks()
+            grenade = Grenade.Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.soldier_settings.movement.direction), self.rect.top, self.soldier_settings.movement.direction, self.assets['images']['grenade'], self.config)
+            grenades.add(grenade)
+            self.grenade_config.number_of_grenades -= 1
+
+
+    def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
+        super().update(dt, bullets, grenades)
+        if self.soldier_settings.state.soldier_alive:
+            self.throw_grenade(grenades)
 
 
 
-class Red_soldier(Soldier):
-    def __init__(self, x: int, y: int, ammo: int, config: settings.Settings, assets: dict) -> None:
-        super().__init__(x, y, ammo, config, assets, 'red')
+class Enemy(Soldier):
+    def __init__(self, x: int, y: int, ammo: int, config: game_settings.Settings, assets: dict, color: str) -> None:
+        super().__init__(x, y, ammo, config, assets, color)
+
+
+    def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
+        super().update(dt, bullets, grenades)
