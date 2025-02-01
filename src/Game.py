@@ -18,10 +18,11 @@ class Game():
         self.assets = {'animations': {}, 'images': {}}
         self.assets_import()
 
-        self.player = Soldier.Player(200, 200, 20, self.config, self.assets, 'green')
-        self.enemy = Soldier.Enemy(500, 200, 20, self.config, self.assets, 'red')
-        self.bullets = pygame.sprite.Group()
-        self.grenades = pygame.sprite.Group()
+        self.player = Soldier.Player(200, 200, self.config, self.assets, 'green')
+        self.enemy = Soldier.Enemy(500, 200, self.config, self.assets, 'red')
+        self.bullet_group = pygame.sprite.Group()
+        self.grenade_group = pygame.sprite.Group()
+        self.explosion_group = pygame.sprite.Group()
 
 
     def assets_import(self) -> None:
@@ -29,19 +30,20 @@ class Game():
         self.assets['images']['grenade'] = self.image_import(Path('src/assets/img/icons/grenade.png'), scale=1)
         self.animations_import(Path('src/assets/img/soldier/green'))
         self.animations_import(Path('src/assets/img/soldier/red'))
+        self.assets['animations']['explosion'] = self.animation_import(Path('src/assets/img/explosion'))
 
 
     def animations_import(self, image_path: Path) -> None:
         self.assets['animations'][image_path.stem] = {}
         for action in os.listdir(image_path):
-            self.animation_import(image_path, action)
+            self.assets['animations'][image_path.stem][action] = self.animation_import(image_path/action)
 
 
-    def animation_import(self, image_path: Path, action: str) -> None:
-            self.assets['animations'][image_path.stem][action] = []
-            for frame in os.listdir(image_path / action):
-                self.assets['animations'][image_path.stem][action].append(self.image_import(image_path / action / frame, self.config.screen.scale))
-
+    def animation_import(self, image_path: Path) -> list[pygame.Surface]:
+        animation = []
+        for frame in os.listdir(image_path):
+            animation.append(self.image_import(image_path / frame, self.config.screen.scale))
+        return animation
 
     def image_import(self, image_path: Path, scale: float) -> pygame.Surface:
         img = pygame.image.load(str(image_path)).convert_alpha()
@@ -97,18 +99,19 @@ class Game():
 
 
     def update(self, dt: int) -> None:
-        self.bullets.update()
-        self.grenades.update()
-        self.player.update(dt, self.bullets, self.grenades)
-        self.enemy.update(dt, self.bullets, self.grenades)
+        self.bullet_group.update(dt)
+        self.grenade_group.update(dt)
+        self.explosion_group.update()
+        self.player.update(dt, self.bullet_group, self.grenade_group, self.explosion_group)
+        self.enemy.update(dt, self.bullet_group, self.grenade_group)
 
-        collided_bullets = pygame.sprite.spritecollide(self.player, self.bullets, False)
+        collided_bullets = pygame.sprite.spritecollide(self.player, self.bullet_group, False)
         for bullet in collided_bullets:
             if self.player.soldier_settings.state.soldier_alive:
                 self.player.soldier_settings.health.health -= 5
                 bullet.kill()
 
-        collided_bullets = pygame.sprite.spritecollide(self.enemy, self.bullets, False)
+        collided_bullets = pygame.sprite.spritecollide(self.enemy, self.bullet_group, False)
         for bullet in collided_bullets:
             if self.enemy.soldier_settings.state.soldier_alive:
                 self.enemy.soldier_settings.health.health -= 25
@@ -121,8 +124,9 @@ class Game():
 
     def screen_update(self) -> None:
         self.draw_background()
-        self.bullets.draw(self.screen)
-        self.grenades.draw(self.screen)
+        self.bullet_group.draw(self.screen)
+        self.grenade_group.draw(self.screen)
+        self.explosion_group.draw(self.screen)
         self.player.draw(self.screen)
         self.enemy.draw(self.screen)
         pygame.display.update()

@@ -6,6 +6,7 @@ class ScreenSettings(BaseModel):
     fps: int
     scale: float
     title: str
+    animation_cooldown: int
 
 class PhysicSettings(BaseModel):
     gravity: float

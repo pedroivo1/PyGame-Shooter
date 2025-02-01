@@ -25,7 +25,6 @@ class AmmoConfig(BaseModel):
     start_ammo: int
 
 class AnimationConfig(BaseModel):
-    animation_cooldown: int
     animation_timer: int
     animation_index: int
     animation_action: str

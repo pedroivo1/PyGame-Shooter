@@ -9,7 +9,8 @@ config_data = {
         'height': int(height*0.9),
         'fps': 60,
         'scale': 2,
-        'title': 'Shooter'
+        'title': 'Shooter',
+        'animation_cooldown': 120
     },
     'physic': {
         'gravity': 0.75
@@ -35,7 +36,6 @@ soldier_settings = {
         "start_ammo": 20,
     },
     "animation": {
-        "animation_cooldown": 100,
         "animation_timer": pygame.time.get_ticks(),
         "animation_index": 0,
         "animation_action": "idle",
