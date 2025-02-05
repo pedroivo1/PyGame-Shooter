@@ -7,9 +7,11 @@ class ScreenSettings(BaseModel):
     scale: float
     title: str
     animation_cooldown: int
+    tile_size: float
 
 class PhysicSettings(BaseModel):
     gravity: float
+    GC: float
 
 class Settings(BaseModel):
     screen: ScreenSettings

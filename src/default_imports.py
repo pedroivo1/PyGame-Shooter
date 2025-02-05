@@ -7,13 +7,15 @@ config_data = {
     'screen': {
         'width': int(width*0.9),
         'height': int(height*0.9),
-        'fps': 60,
+        'fps': 200,
         'scale': 2,
         'title': 'Shooter',
-        'animation_cooldown': 120
+        'animation_cooldown': 100,
+        'tile_size':16
     },
     'physic': {
-        'gravity': 0.75
+        'gravity': 0.05,
+        'GC': 13.0
     }
 }
 
@@ -47,7 +49,7 @@ grenade_config = {
     "threw_grenade": False,
     "threw_grenade_cooldown": 400,
     "threw_grenade_time": pygame.time.get_ticks(),
-    "number_of_grenades": 5,
+    "number_of_grenades": 500,
 }
 
 colors = {

@@ -2,14 +2,14 @@ import pygame
 import sys
 import os
 from src.model.game import Soldier
-from src.model.settings import game_settings
+from src.model.settings import Game_settings
 from src import default_imports
 from pathlib import Path
 
 
 class Game():
     def __init__(self) -> None:
-        self.config = game_settings.Settings(**(default_imports.config_data))
+        self.config = Game_settings.Settings(**(default_imports.config_data))
         self.screen = pygame.display.set_mode((self.config.screen.width, self.config.screen.height))
         pygame.display.set_caption(self.config.screen.title)
 
@@ -20,9 +20,12 @@ class Game():
 
         self.player = Soldier.Player(200, 200, self.config, self.assets, 'green')
         self.enemy = Soldier.Enemy(500, 200, self.config, self.assets, 'red')
+        self.soldier_group = pygame.sprite.Group()
         self.bullet_group = pygame.sprite.Group()
         self.grenade_group = pygame.sprite.Group()
         self.explosion_group = pygame.sprite.Group()
+
+        self.soldier_group.add(self.player, self.enemy)
 
 
     def assets_import(self) -> None:
@@ -30,20 +33,21 @@ class Game():
         self.assets['images']['grenade'] = self.image_import(Path('src/assets/img/icons/grenade.png'), scale=1)
         self.animations_import(Path('src/assets/img/soldier/green'))
         self.animations_import(Path('src/assets/img/soldier/red'))
-        self.assets['animations']['explosion'] = self.animation_import(Path('src/assets/img/explosion'))
+        self.assets['animations']['explosion'] = self.animation_import(Path('src/assets/img/explosion'), scale=1)
 
 
     def animations_import(self, image_path: Path) -> None:
         self.assets['animations'][image_path.stem] = {}
         for action in os.listdir(image_path):
-            self.assets['animations'][image_path.stem][action] = self.animation_import(image_path/action)
+            self.assets['animations'][image_path.stem][action] = self.animation_import(image_path/action, scale=self.config.screen.scale)
 
 
-    def animation_import(self, image_path: Path) -> list[pygame.Surface]:
+    def animation_import(self, image_path: Path, scale: float) -> list[pygame.Surface]:
         animation = []
         for frame in os.listdir(image_path):
-            animation.append(self.image_import(image_path / frame, self.config.screen.scale))
+            animation.append(self.image_import(image_path / frame, scale))
         return animation
+
 
     def image_import(self, image_path: Path, scale: float) -> pygame.Surface:
         img = pygame.image.load(str(image_path)).convert_alpha()
@@ -65,42 +69,44 @@ class Game():
                 if event.key == pygame.K_ESCAPE:
                     self.finesh_game()
 
-                if event.key == pygame.K_a:
-                    self.player.soldier_settings.state.running_left = True
-                    self.player.soldier_settings.state.running_right = False
-                    if not self.player.soldier_settings.state.in_air:
-                        self.player.action_update('run')
-                if event.key == pygame.K_d:
-                    self.player.soldier_settings.state.running_right = True
-                    self.player.soldier_settings.state.running_left = False
-                    if not self.player.soldier_settings.state.in_air:
-                        self.player.action_update('run')
-                if event.key == pygame.K_w and not self.player.soldier_settings.state.in_air:
-                    self.player.soldier_settings.state.jumped = True
-                    self.player.action_update('jump')
-                if event.key == pygame.K_SPACE:
-                    self.player.soldier_settings.ammo.shot = True
-                if event.key == pygame.K_q:
-                    self.player.grenade_config.threw_grenade = True
-
+                if self.player.soldier_settings.state.soldier_alive:
+                    if event.key == pygame.K_a:
+                        self.player.soldier_settings.state.running_left = True
+                        self.player.soldier_settings.state.running_right = False
+                        if not self.player.soldier_settings.state.in_air:
+                            self.player.action_update('run')
+                    if event.key == pygame.K_d:
+                        self.player.soldier_settings.state.running_right = True
+                        self.player.soldier_settings.state.running_left = False
+                        if not self.player.soldier_settings.state.in_air:
+                            self.player.action_update('run')
+                    if event.key == pygame.K_w and not self.player.soldier_settings.state.in_air:
+                        self.player.soldier_settings.state.jumped = True
+                        self.player.action_update('jump')
+                    if event.key == pygame.K_SPACE:
+                        self.player.soldier_settings.ammo.shot = True
+                    if event.key == pygame.K_q:
+                        self.player.grenade_config.threw_grenade = True
+            
             elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_a:
-                    self.player.soldier_settings.state.running_left = False
-                    if not self.player.soldier_settings.state.running_right:
-                        self.player.action_update('idle')
-                if event.key == pygame.K_d:
-                    self.player.soldier_settings.state.running_right = False
-                    if not self.player.soldier_settings.state.running_left:
-                        self.player.action_update('idle')
-                if event.key == pygame.K_SPACE:
-                    self.player.soldier_settings.ammo.shot = False
-                if event.key == pygame.K_q:
-                    self.player.grenade_config.threw_grenade = False
+                if self.player.soldier_settings.state.soldier_alive:
+                    if event.key == pygame.K_a:
+                        self.player.soldier_settings.state.running_left = False
+                        if not self.player.soldier_settings.state.running_right:
+                            self.player.action_update('idle')
+                    if event.key == pygame.K_d:
+                        self.player.soldier_settings.state.running_right = False
+                        if not self.player.soldier_settings.state.running_left:
+                            self.player.action_update('idle')
+                    if event.key == pygame.K_SPACE:
+                        self.player.soldier_settings.ammo.shot = False
+                    if event.key == pygame.K_q:
+                        self.player.grenade_config.threw_grenade = False
 
 
     def update(self, dt: int) -> None:
         self.bullet_group.update(dt)
-        self.grenade_group.update(dt)
+        self.grenade_group.update(dt, self.soldier_group)
         self.explosion_group.update()
         self.player.update(dt, self.bullet_group, self.grenade_group, self.explosion_group)
         self.enemy.update(dt, self.bullet_group, self.grenade_group)

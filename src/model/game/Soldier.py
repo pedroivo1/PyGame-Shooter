@@ -2,17 +2,17 @@ import pygame
 from abc import ABC, abstractmethod
 from src.model.game import Bullet
 from src.model.game import Grenade
-from src.model.settings import game_settings
-from src.model.settings import soldier_settings
+from src.model.settings import Game_settings
+from src.model.settings import Soldier_settings
 from src import default_imports
 
 class Soldier(pygame.sprite.Sprite, ABC):
-    def __init__(self, x: int, y: int, config: game_settings.Settings, assets: dict, color: str) -> None:
+    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
         super().__init__()
 
         self.config = config
         self.assets = assets
-        self.soldier_settings = soldier_settings.SoldierConfig(**(default_imports.soldier_settings))
+        self.soldier_settings = Soldier_settings.SoldierConfig(**(default_imports.soldier_settings))
         self.soldier_settings.animation.animations_map = self.assets['animations'][color]
 
         self.image = self.soldier_settings.animation.animations_map[self.soldier_settings.animation.animation_action][self.soldier_settings.animation.animation_index]
@@ -70,13 +70,14 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.soldier_settings.state.flip_image = False
             self.soldier_settings.movement.direction = 1
 
-        self.soldier_settings.movement.y_velocity += self.config.physic.gravity
+        self.soldier_settings.movement.y_velocity = self.soldier_settings.movement.y_velocity + self.config.physic.gravity*dt
         if self.soldier_settings.state.jumped:
             self.soldier_settings.movement.y_velocity -= 11
             self.soldier_settings.state.jumped = False
             self.soldier_settings.state.in_air = True
 
-        dy += self.soldier_settings.movement.y_velocity
+
+        dy += self.soldier_settings.movement.y_velocity * dt / self.config.physic.GC
 
         if self.rect.bottom + dy > 300:
             self.soldier_settings.movement.y_velocity = 0
@@ -135,9 +136,9 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, x: int, y: int, config: game_settings.Settings, assets: dict, color: str) -> None:
+    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
         super().__init__(x, y, config, assets, color)
-        self.grenade_config = soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
+        self.grenade_config = Soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
         self.grenade_config.threw_grenade = False
         self.grenade_config.threw_grenade_cooldown = 400
         self.grenade_config.threw_grenade_time = pygame.time.get_ticks()
@@ -160,7 +161,7 @@ class Player(Soldier):
 
 
 class Enemy(Soldier):
-    def __init__(self, x: int, y: int, config: game_settings.Settings, assets: dict, color: str) -> None:
+    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
         super().__init__(x, y, config, assets, color)
 
 
