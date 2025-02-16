@@ -3,21 +3,20 @@ import pygame
 
 width, height = utils.get_screen_size()
 
-config_data = {
-    'screen': {
-        'width': int(width*0.9),
-        'height': int(height*0.9),
-        'fps': 200,
-        'scale': 2,
-        'title': 'Shooter',
-        'animation_cooldown': 100,
-        'tile_size': 16
-    },
-    'physics': {
-        'gravity': 0.05,
-        'GC': 13.0
+screen_settings = {
+    'width': int(width*0.9),
+    'height': int(height*0.9),
+    'fps': 200,
+    'scale': 2,
+    'title': 'Shooter',
+    'animation_cooldown': 100,
+    'tile_size': 16
     }
-}
+
+physics_settings = {
+    'gravity': 0.05,
+    'GC': 13.0
+    }
 
 soldier_settings = {
     "movement": {"x_velocity": 0.3, "y_velocity": 0, "direction": 1},

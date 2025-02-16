@@ -1,11 +1,11 @@
 import pygame
-from ..settings import Game_settings
+from ..settings import screen
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, config: Game_settings.Settings) -> None:
+    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, screen_settings: screen.ScreenSettings) -> None:
         super().__init__()
 
-        self.config = config
+        self.screen_settings = screen_settings
 
         self.x_velocity = 0.8
         self.direction = direction
@@ -15,6 +15,6 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = (x, y)
 
     def update(self, dt: int) -> None:
-        if self.rect.right < 0 or self.rect.left > self.config.screen.width:
+        if self.rect.right < 0 or self.rect.left > self.screen_settings.width:
             self.kill()
         self.rect.x += self.x_velocity * self.direction * dt

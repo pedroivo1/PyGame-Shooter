@@ -8,11 +8,3 @@ class ScreenSettings(BaseModel):
     title: str
     animation_cooldown: int
     tile_size: float
-
-class PhysicsSettings(BaseModel):
-    gravity: float
-    GC: float
-
-class Settings(BaseModel):
-    screen: ScreenSettings
-    physics: PhysicsSettings

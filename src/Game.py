@@ -3,25 +3,27 @@ import sys
 import os
 from .classes import Soldier
 from .classes import ItemBox
-from .settings import Game_settings
-from . import default_imports
+from .settings import screen
+from .settings import physics
+from .settings import default_imports
 from pathlib import Path
 
 
 class Game():
     def __init__(self) -> None:
-        self.config = Game_settings.Settings(**(default_imports.config_data))
+        self.screen_settings = screen.ScreenSettings(**(default_imports.screen_settings))
+        self.physics_settings = physics.PhysicsSettings(**(default_imports.physics_settings))
         self.font = pygame.font.SysFont('Futura', 30)
-        self.screen = pygame.display.set_mode((self.config.screen.width, self.config.screen.height))
-        pygame.display.set_caption(self.config.screen.title)
+        self.screen = pygame.display.set_mode((self.screen_settings.width, self.screen_settings.height))
+        pygame.display.set_caption(self.screen_settings.title)
 
         self.clock = pygame.time.Clock()
 
         self.assets = {'animations': {}, 'images': {}}
         self.assets_import()
 
-        self.player = Soldier.Player(200, 200, self.config, self.assets, 'green')
-        self.enemy = Soldier.Enemy(500, 200, self.config, self.assets, 'red')
+        self.player = Soldier.Player(200, 200, self.screen_settings, self.physics_settings, self.assets, 'green')
+        self.enemy = Soldier.Enemy(500, 200, self.screen_settings, self.physics_settings, self.assets, 'red')
         self.soldier_group = pygame.sprite.Group()
         self.soldier_group.add(self.player, self.enemy)
 
@@ -30,9 +32,9 @@ class Game():
         self.explosion_group = pygame.sprite.Group()
 
         self.item_box_group = pygame.sprite.Group()
-        self.item_box_group.add(ItemBox.HealthBox(600, 200, self.assets['images']['health_box'], self.config))
-        self.item_box_group.add(ItemBox.GrenadeBox(800, 200, self.assets['images']['grenade_box'], self.config))
-        self.item_box_group.add(ItemBox.BulletBox(1000, 200, self.assets['images']['ammo_box'], self.config))
+        self.item_box_group.add(ItemBox.HealthBox(600, 200, self.assets['images']['health_box'], self.screen_settings))
+        self.item_box_group.add(ItemBox.GrenadeBox(800, 200, self.assets['images']['grenade_box'], self.screen_settings))
+        self.item_box_group.add(ItemBox.BulletBox(1000, 200, self.assets['images']['ammo_box'], self.screen_settings))
 
 
     def assets_import(self) -> None:
@@ -49,7 +51,7 @@ class Game():
     def animations_import(self, image_path: Path) -> None:
         self.assets['animations'][image_path.stem] = {}
         for action in os.listdir(image_path):
-            self.assets['animations'][image_path.stem][action] = self.animation_import(image_path/action, scale=self.config.screen.scale)
+            self.assets['animations'][image_path.stem][action] = self.animation_import(image_path/action, scale=self.screen_settings.scale)
 
 
     def animation_import(self, image_path: Path, scale: float) -> list[pygame.Surface]:
@@ -120,7 +122,7 @@ class Game():
         self.explosion_group.update()
         self.item_box_group.update(self.player)
         self.player.update(dt, self.bullet_group, self.grenade_group, self.explosion_group)
-        self.enemy.update(dt, self.bullet_group, self.grenade_group)
+        self.enemy.update(dt, self.bullet_group)
 
         collided_bullets = pygame.sprite.spritecollide(self.player, self.bullet_group, False)
         for bullet in collided_bullets:
@@ -163,7 +165,7 @@ class Game():
 
     def run(self) -> None:
         while True:
-            dt = self.clock.tick(self.config.screen.fps)
+            dt = self.clock.tick(self.screen_settings.fps)
             self.event_handler()
             self.update(dt)
             self.screen_update()

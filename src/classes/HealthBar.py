@@ -1,5 +1,5 @@
 import pygame
-from .. import default_imports
+from ..settings import default_imports
 
 class HealthBar():
     def __init__(self, soldier) -> None:

@@ -1,13 +1,15 @@
 import pygame
-from ..settings import Game_settings
+from ..settings import screen
+from ..settings import physics
 from . import Explosion
 from . import Soldier
 
 class Grenade(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, explosion_animation: list[pygame.Surface], explosion_group: pygame.sprite.Group, config: Game_settings.Settings) -> None:
+    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, explosion_animation: list[pygame.Surface], explosion_group: pygame.sprite.Group, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings) -> None:
         super().__init__()
 
-        self.config = config
+        self.screen_settings = screen_settings
+        self.physics_settings = physics_settings
 
         self.x_velocity = 0.7
         self.y_velocity = -8
@@ -39,17 +41,17 @@ class Grenade(pygame.sprite.Sprite):
             self.direction *= -1
             self.x_velocity *= 0.5
             dx = 0 - self.rect.left
-        if self.rect.right + dx > self.config.screen.width:
+        if self.rect.right + dx > self.screen_settings.width:
             self.direction *= -1
             self.x_velocity *= 0.5
-            dx = self.config.screen.width - self.rect.right
+            dx = self.screen_settings.width - self.rect.right
 
         return dx
 
 
     def y_movement(self, dt: int) -> int:
-        self.y_velocity += self.config.physics.gravity * dt
-        dy = self.y_velocity * dt / self.config.physics.GC
+        self.y_velocity += self.physics_settings.gravity * dt
+        dy = self.y_velocity * dt / self.physics_settings.GC
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
             self.y_velocity = -self.y_velocity * 0.5
@@ -66,7 +68,7 @@ class Grenade(pygame.sprite.Sprite):
 
     def explode(self, soldier_group: Soldier) -> None:
         self.kill()
-        self.explosion_group.add(Explosion.Explosion(self.rect.x, self.rect.y, self.explosion_animation, self.config))
+        self.explosion_group.add(Explosion.Explosion(self.rect.x, self.rect.y, self.explosion_animation, self.screen_settings))
 
         collided_soldiers = pygame.sprite.spritecollide(self, soldier_group, False)
         for soldier in collided_soldiers:

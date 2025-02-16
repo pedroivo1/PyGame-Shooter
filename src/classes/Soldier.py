@@ -3,15 +3,17 @@ from abc import ABC, abstractmethod
 from . import Bullet
 from . import Grenade
 from . import HealthBar
-from ..settings import Game_settings
+from ..settings import screen
+from ..settings import physics
 from ..settings import Soldier_settings
-from .. import default_imports
+from ..settings import default_imports
 
 class Soldier(pygame.sprite.Sprite, ABC):
-    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
+    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
         super().__init__()
 
-        self.config = config
+        self.screen_settings = screen_settings
+        self.physics_settings = physics_settings
         self.assets = assets
         self.soldier_settings = Soldier_settings.SoldierConfig(**(default_imports.soldier_settings))
         self.soldier_settings.animation.animations_map = self.assets['animations'][color]
@@ -39,7 +41,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
     def animation_timer(self) -> bool:
-        return pygame.time.get_ticks() - self.soldier_settings.animation.animation_timer > self.config.screen.animation_cooldown
+        return pygame.time.get_ticks() - self.soldier_settings.animation.animation_timer > self.screen_settings.animation_cooldown
 
 
     def death_animation_control(self) -> None:
@@ -75,14 +77,14 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.soldier_settings.state.flip_image = False
             self.soldier_settings.movement.direction = 1
 
-        self.soldier_settings.movement.y_velocity = self.soldier_settings.movement.y_velocity + self.config.physics.gravity*dt
+        self.soldier_settings.movement.y_velocity = self.soldier_settings.movement.y_velocity + self.physics_settings.gravity*dt
         if self.soldier_settings.state.jumped:
             self.soldier_settings.movement.y_velocity -= 11
             self.soldier_settings.state.jumped = False
             self.soldier_settings.state.in_air = True
 
 
-        dy += self.soldier_settings.movement.y_velocity * dt / self.config.physics.GC
+        dy += self.soldier_settings.movement.y_velocity * dt / self.physics_settings.GC
 
         if self.rect.bottom + dy > 300:
             self.soldier_settings.movement.y_velocity = 0
@@ -99,7 +101,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
     def apply_gravity(self, dt: int) -> None:
-        self.soldier_settings.movement.y_velocity += self.config.physic.gravity
+        self.soldier_settings.movement.y_velocity += self.physics_settings.gravity
         if self.rect.bottom + self.soldier_settings.movement.y_velocity > 300:
             self.soldier_settings.movement.y_velocity = 0
             self.rect.bottom = 300
@@ -125,13 +127,13 @@ class Soldier(pygame.sprite.Sprite, ABC):
                 self.rect.centery,
                 self.soldier_settings.movement.direction,
                 self.assets['images']['bullet'],
-                self.config
+                self.screen_settings
             )
             bullets.add(bullet)
             self.soldier_settings.ammo.ammo -= 1
 
     @abstractmethod
-    def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
+    def update(self, dt: int, bullets: pygame.sprite.Group) -> None:
         self.is_soldier_alive()
         self.health_bar.update(self)
         if self.soldier_settings.state.soldier_alive:
@@ -143,30 +145,30 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
-        super().__init__(x, y, config, assets, color)
+    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
+        super().__init__(x, y, screen_settings, physics_settings, assets, color)
         self.grenade_config = Soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
 
 
     def throw_grenade(self, grenades: pygame.sprite.Group, explosion_group: pygame.sprite.Group) -> None:
         if self.grenade_config.threw_grenade and self.grenade_config.number_of_grenades and pygame.time.get_ticks() - self.grenade_config.threw_grenade_time > self.grenade_config.threw_grenade_cooldown:
             self.grenade_config.threw_grenade_time = pygame.time.get_ticks()
-            grenade = Grenade.Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.soldier_settings.movement.direction), self.rect.top, self.soldier_settings.movement.direction, self.assets['images']['grenade'], self.assets['animations']['explosion'], explosion_group, self.config)
+            grenade = Grenade.Grenade(self.rect.centerx + (0.5 * self.rect.size[0] * self.soldier_settings.movement.direction), self.rect.top, self.soldier_settings.movement.direction, self.assets['images']['grenade'], self.assets['animations']['explosion'], explosion_group, self.screen_settings, self.physics_settings)
             grenades.add(grenade)
             self.grenade_config.number_of_grenades -= 1
 
 
-    def update(self, dt: int, bullet_group: pygame.sprite.Group, grenade_group: pygame.sprite.Group, explosion_group:pygame.sprite.Group) -> None:
-        super().update(dt, bullet_group, grenade_group)
+    def update(self, dt: int, bullet_group: pygame.sprite.Group, grenade_group: pygame.sprite.Group, explosion_group: pygame.sprite.Group) -> None:
+        super().update(dt, bullet_group)
         if self.soldier_settings.state.soldier_alive:
             self.throw_grenade(grenade_group, explosion_group)
 
 
 
 class Enemy(Soldier):
-    def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
-        super().__init__(x, y, config, assets, color)
+    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
+        super().__init__(x, y, screen_settings, physics_settings, assets, color)
 
 
-    def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
-        super().update(dt, bullets, grenades)
+    def update(self, dt: int, bullets: pygame.sprite.Group) -> None:
+        super().update(dt, bullets)
