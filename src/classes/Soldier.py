@@ -9,9 +9,17 @@ from ..settings import Soldier_settings
 from ..settings import default_imports
 
 class Soldier(pygame.sprite.Sprite, ABC):
-    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            screen_settings: screen.ScreenSettings,
+            physics_settings: physics.PhysicsSettings,
+            assets: dict,
+            color: str
+            ) -> None:
+        
         super().__init__()
-
         self.screen_settings = screen_settings
         self.physics_settings = physics_settings
         self.assets = assets
@@ -145,7 +153,16 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            screen_settings: screen.ScreenSettings,
+            physics_settings: physics.PhysicsSettings,
+            assets: dict,
+            color: str
+        ) -> None:
+        
         super().__init__(x, y, screen_settings, physics_settings, assets, color)
         self.grenade_config = Soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
 
@@ -166,7 +183,15 @@ class Player(Soldier):
 
 
 class Enemy(Soldier):
-    def __init__(self, x: int, y: int, screen_settings: screen.ScreenSettings, physics_settings: physics.PhysicsSettings, assets: dict, color: str) -> None:
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            screen_settings: screen.ScreenSettings,
+            physics_settings: physics.PhysicsSettings,
+            assets: dict,
+            color: str
+            ) -> None:
         super().__init__(x, y, screen_settings, physics_settings, assets, color)
 
 

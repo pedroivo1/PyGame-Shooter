@@ -15,7 +15,7 @@ class ItemBox(pygame.sprite.Sprite, ABC):
         self.rect.midtop = (x + self.screen_settings.tile_size // 2, y + (self.screen_settings.tile_size - self.image.get_height()))
 
 
-    def update(self, player: Soldier.Player):
+    def update(self, player: Soldier.Player) -> None:
         if pygame.sprite.collide_rect(self, player):
             self.kill()
             self.action(player)
@@ -32,7 +32,7 @@ class HealthBox(ItemBox):
         super().__init__(x, y, image, config)
 
 
-    def action(self, player: Soldier.Player):
+    def action(self, player: Soldier.Player) -> None:
         if player.soldier_settings.health.health < 75:
             player.soldier_settings.health.health += 25
         else:
@@ -46,7 +46,7 @@ class GrenadeBox(ItemBox):
         super().__init__(x, y, image, config)
 
 
-    def action(self, player: Soldier.Player):
+    def action(self, player: Soldier.Player) -> None:
         player.grenade_config.number_of_grenades += 2
 
 
@@ -56,5 +56,5 @@ class BulletBox(ItemBox):
         super().__init__(x, y, image, config)
 
 
-    def action(self, player: Soldier.Player):
+    def action(self, player: Soldier.Player) -> None:
         player.soldier_settings.ammo.ammo += 8

@@ -1,6 +1,6 @@
 import ctypes
 
-def get_screen_size():
+def get_screen_size() -> tuple[int, int]:
     user32 = ctypes.windll.user32
     screen_width = user32.GetSystemMetrics(0)
     screen_height = user32.GetSystemMetrics(1)

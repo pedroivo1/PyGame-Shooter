@@ -66,7 +66,7 @@ class Game():
         return pygame.transform.scale(img, (img.get_width() * scale, img.get_height() * scale))
 
 
-    def end_game(self):
+    def end_game(self) -> None:
         print("\033[92mThe game has closed successfully.\033[0m\n")
         pygame.quit()
         sys.exit()
@@ -141,7 +141,7 @@ class Game():
         self.screen.fill(default_imports.colors['bg'])
 
 
-    def draw_text(self, text, font, text_color, x, y):
+    def draw_text(self, text, font, text_color, x, y) -> None:
         img = font.render(text, True, text_color)
         self.screen.blit(img, (x, y))
 

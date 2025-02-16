@@ -18,7 +18,7 @@ class HealthBar():
         self.health = soldier.soldier_settings.health.health
 
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         pygame.draw.rect(screen, default_imports.colors['black'], (self.x-1, self.y-1, self.width+2, self.height+2))
         pygame.draw.rect(screen, default_imports.colors['red'], (self.x, self.y, self.width, self.height))
         pygame.draw.rect(screen, default_imports.colors['green'], (self.x, self.y, self.width * (self.health/self.start_health), self.height))
