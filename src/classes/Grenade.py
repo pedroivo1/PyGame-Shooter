@@ -1,10 +1,10 @@
 import pygame
-from src.model.settings import Game_settings
-from src.model.game import Explosion
-from src.model.game import Soldier
+from ..settings import Game_settings
+from . import Explosion
+from . import Soldier
 
 class Grenade(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, explosion_animation: list[pygame.Surface], explosion_group:pygame.sprite.Group, config: Game_settings.Settings) -> None:
+    def __init__(self, x: int, y: int, direction: int, image: pygame.Surface, explosion_animation: list[pygame.Surface], explosion_group: pygame.sprite.Group, config: Game_settings.Settings) -> None:
         super().__init__()
 
         self.config = config
@@ -24,16 +24,16 @@ class Grenade(pygame.sprite.Sprite):
 
 
     def update(self, dt: int, soldier_group: Soldier) -> None:
-        dx = self.x_moviment(dt)
+        dx = self.x_movement(dt)
         self.rect.x += dx
 
-        dy = self.y_moviment(dt)
+        dy = self.y_movement(dt)
         self.rect.y += dy
 
         self.timer(soldier_group)
 
 
-    def x_moviment(self, dt: int) -> int:
+    def x_movement(self, dt: int) -> int:
         dx = self.x_velocity * self.direction * dt
         if self.rect.left + dx < 0:
             self.direction *= -1
@@ -47,9 +47,9 @@ class Grenade(pygame.sprite.Sprite):
         return dx
 
 
-    def y_moviment(self, dt: int) -> int:
-        self.y_velocity += self.config.physic.gravity*dt
-        dy = self.y_velocity * dt / self.config.physic.GC
+    def y_movement(self, dt: int) -> int:
+        self.y_velocity += self.config.physics.gravity * dt
+        dy = self.y_velocity * dt / self.config.physics.GC
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
             self.y_velocity = -self.y_velocity * 0.5

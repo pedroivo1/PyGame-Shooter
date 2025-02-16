@@ -1,15 +1,17 @@
 import pygame
 import sys
 import os
-from src.model.game import Soldier
-from src.model.settings import Game_settings
-from src import default_imports
+from .classes import Soldier
+from .classes import ItemBox
+from .settings import Game_settings
+from . import default_imports
 from pathlib import Path
 
 
 class Game():
     def __init__(self) -> None:
         self.config = Game_settings.Settings(**(default_imports.config_data))
+        self.font = pygame.font.SysFont('Futura', 30)
         self.screen = pygame.display.set_mode((self.config.screen.width, self.config.screen.height))
         pygame.display.set_caption(self.config.screen.title)
 
@@ -21,16 +23,24 @@ class Game():
         self.player = Soldier.Player(200, 200, self.config, self.assets, 'green')
         self.enemy = Soldier.Enemy(500, 200, self.config, self.assets, 'red')
         self.soldier_group = pygame.sprite.Group()
+        self.soldier_group.add(self.player, self.enemy)
+
         self.bullet_group = pygame.sprite.Group()
         self.grenade_group = pygame.sprite.Group()
         self.explosion_group = pygame.sprite.Group()
 
-        self.soldier_group.add(self.player, self.enemy)
+        self.item_box_group = pygame.sprite.Group()
+        self.item_box_group.add(ItemBox.HealthBox(600, 200, self.assets['images']['health_box'], self.config))
+        self.item_box_group.add(ItemBox.GrenadeBox(800, 200, self.assets['images']['grenade_box'], self.config))
+        self.item_box_group.add(ItemBox.BulletBox(1000, 200, self.assets['images']['ammo_box'], self.config))
 
 
     def assets_import(self) -> None:
         self.assets['images']['bullet'] = self.image_import(Path('src/assets/img/icons/bullet.png'), scale=1)
         self.assets['images']['grenade'] = self.image_import(Path('src/assets/img/icons/grenade.png'), scale=1)
+        self.assets['images']['ammo_box'] = self.image_import(Path('src/assets/img/icons/ammo_box.png'), scale=1)
+        self.assets['images']['grenade_box'] = self.image_import(Path('src/assets/img/icons/grenade_box.png'), scale=1)
+        self.assets['images']['health_box'] = self.image_import(Path('src/assets/img/icons/health_box.png'), scale=1)
         self.animations_import(Path('src/assets/img/soldier/green'))
         self.animations_import(Path('src/assets/img/soldier/red'))
         self.assets['animations']['explosion'] = self.animation_import(Path('src/assets/img/explosion'), scale=1)
@@ -54,7 +64,7 @@ class Game():
         return pygame.transform.scale(img, (img.get_width() * scale, img.get_height() * scale))
 
 
-    def finesh_game(self):
+    def end_game(self):
         print("\033[92mThe game has closed successfully.\033[0m\n")
         pygame.quit()
         sys.exit()
@@ -63,11 +73,11 @@ class Game():
     def event_handler(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.finesh_game()
+                self.end_game()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.finesh_game()
+                    self.end_game()
 
                 if self.player.soldier_settings.state.soldier_alive:
                     if event.key == pygame.K_a:
@@ -87,7 +97,7 @@ class Game():
                         self.player.soldier_settings.ammo.shot = True
                     if event.key == pygame.K_q:
                         self.player.grenade_config.threw_grenade = True
-            
+
             elif event.type == pygame.KEYUP:
                 if self.player.soldier_settings.state.soldier_alive:
                     if event.key == pygame.K_a:
@@ -108,6 +118,7 @@ class Game():
         self.bullet_group.update(dt)
         self.grenade_group.update(dt, self.soldier_group)
         self.explosion_group.update()
+        self.item_box_group.update(self.player)
         self.player.update(dt, self.bullet_group, self.grenade_group, self.explosion_group)
         self.enemy.update(dt, self.bullet_group, self.grenade_group)
 
@@ -128,11 +139,23 @@ class Game():
         self.screen.fill(default_imports.colors['bg'])
 
 
+    def draw_text(self, text, font, text_color, x, y):
+        img = font.render(text, True, text_color)
+        self.screen.blit(img, (x, y))
+
+
     def screen_update(self) -> None:
         self.draw_background()
+        self.draw_text('BULLETS ', self.font, default_imports.colors['white'], 10, 35)
+        for x in range(self.player.soldier_settings.ammo.ammo):
+            self.screen.blit(self.assets['images']['bullet'], (105 + (x * 10), 38))
+        self.draw_text('GRENADES ', self.font, default_imports.colors['white'], 10, 65)
+        for x in range(self.player.grenade_config.number_of_grenades):
+            self.screen.blit(self.assets['images']['grenade'], (135 + (x * 15), 68))
         self.bullet_group.draw(self.screen)
         self.grenade_group.draw(self.screen)
         self.explosion_group.draw(self.screen)
+        self.item_box_group.draw(self.screen)
         self.player.draw(self.screen)
         self.enemy.draw(self.screen)
         pygame.display.update()

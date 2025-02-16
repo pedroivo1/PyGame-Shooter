@@ -1,10 +1,11 @@
 # PyGame-Shooter
 
-# 🛠️ Update: Refactoring & Explosion Mechanics
+## 🛠️ Update: Refactoring & Explosion Mechanics
 
-## 🔄 Refactoring
-We have refactored the `animation_import` method in the `Game` class, improving its structure and maintainability.
+### 🔄 Refactoring
+- The `src` folder structure has been reorganized for better maintainability.
 
-## 💥 New Feature: Explosion System
-- Implemented an `Explosion` class that is triggered when a `Grenade` is destroyed.
-- The `Grenade` now deals **area damage** to all soldiers within its proximity radius.
+### 💥 New Feature: Explosion System
+- Implemented a new `HealthBar` class.
+- Each `Soldier` now has an associated `HealthBar` displayed above their head.
+- Added visual indicators showing the number of `Bullets` and `Grenades` the player has.

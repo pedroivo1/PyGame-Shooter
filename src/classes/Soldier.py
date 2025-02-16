@@ -1,10 +1,11 @@
 import pygame
 from abc import ABC, abstractmethod
-from src.model.game import Bullet
-from src.model.game import Grenade
-from src.model.settings import Game_settings
-from src.model.settings import Soldier_settings
-from src import default_imports
+from . import Bullet
+from . import Grenade
+from . import HealthBar
+from ..settings import Game_settings
+from ..settings import Soldier_settings
+from .. import default_imports
 
 class Soldier(pygame.sprite.Sprite, ABC):
     def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
@@ -15,9 +16,12 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.soldier_settings = Soldier_settings.SoldierConfig(**(default_imports.soldier_settings))
         self.soldier_settings.animation.animations_map = self.assets['animations'][color]
 
+
         self.image = self.soldier_settings.animation.animations_map[self.soldier_settings.animation.animation_action][self.soldier_settings.animation.animation_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
+
+        self.health_bar = HealthBar.HealthBar(self)
 
 
     def action_update(self, new_action: str) -> None:
@@ -45,6 +49,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
     def draw(self, screen: pygame.Surface) -> None:
+        self.health_bar.draw(screen)
         screen.blit(pygame.transform.flip(self.image, self.soldier_settings.state.flip_image, False), self.rect)
 
 
@@ -70,14 +75,14 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.soldier_settings.state.flip_image = False
             self.soldier_settings.movement.direction = 1
 
-        self.soldier_settings.movement.y_velocity = self.soldier_settings.movement.y_velocity + self.config.physic.gravity*dt
+        self.soldier_settings.movement.y_velocity = self.soldier_settings.movement.y_velocity + self.config.physics.gravity*dt
         if self.soldier_settings.state.jumped:
             self.soldier_settings.movement.y_velocity -= 11
             self.soldier_settings.state.jumped = False
             self.soldier_settings.state.in_air = True
 
 
-        dy += self.soldier_settings.movement.y_velocity * dt / self.config.physic.GC
+        dy += self.soldier_settings.movement.y_velocity * dt / self.config.physics.GC
 
         if self.rect.bottom + dy > 300:
             self.soldier_settings.movement.y_velocity = 0
@@ -128,9 +133,11 @@ class Soldier(pygame.sprite.Sprite, ABC):
     @abstractmethod
     def update(self, dt: int, bullets: pygame.sprite.Group, grenades: pygame.sprite.Group) -> None:
         self.is_soldier_alive()
+        self.health_bar.update(self)
         if self.soldier_settings.state.soldier_alive:
             self.shoot(bullets)
             self.move(dt)
+
         self.animation_update()
 
 
@@ -139,10 +146,6 @@ class Player(Soldier):
     def __init__(self, x: int, y: int, config: Game_settings.Settings, assets: dict, color: str) -> None:
         super().__init__(x, y, config, assets, color)
         self.grenade_config = Soldier_settings.GrenadeConfig(**(default_imports.grenade_config))
-        self.grenade_config.threw_grenade = False
-        self.grenade_config.threw_grenade_cooldown = 400
-        self.grenade_config.threw_grenade_time = pygame.time.get_ticks()
-        self.grenade_config.number_of_grenades = 5
 
 
     def throw_grenade(self, grenades: pygame.sprite.Group, explosion_group: pygame.sprite.Group) -> None:

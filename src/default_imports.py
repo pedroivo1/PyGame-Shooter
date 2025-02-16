@@ -1,7 +1,7 @@
-from src import ultils
+from src import utils
 import pygame
 
-width, height = ultils.get_screen_size()
+width, height = utils.get_screen_size()
 
 config_data = {
     'screen': {
@@ -11,9 +11,9 @@ config_data = {
         'scale': 2,
         'title': 'Shooter',
         'animation_cooldown': 100,
-        'tile_size':16
+        'tile_size': 16
     },
-    'physic': {
+    'physics': {
         'gravity': 0.05,
         'GC': 13.0
     }
@@ -49,11 +49,14 @@ grenade_config = {
     "threw_grenade": False,
     "threw_grenade_cooldown": 400,
     "threw_grenade_time": pygame.time.get_ticks(),
-    "number_of_grenades": 500,
+    "number_of_grenades": 5,
 }
 
 colors = {
     'bg': (144, 201, 120),
     'red': (210, 60, 40),
-    'gray': (60, 60, 60)
+    'green': (60, 210, 40),
+    'gray': (60, 60, 60),
+    'white': (255, 255, 255),
+    'black': (0, 0, 0)
 }
