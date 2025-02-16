@@ -1,11 +1,11 @@
 # PyGame-Shooter
 
-## 🛠️ Update: Refactoring & Explosion Mechanics
+## 🛠️ Update: Refactoring & Health Bar  
 
-### 🔄 Refactoring
-- The `src` folder structure has been reorganized for better maintainability.
+### 🔄 Refactoring  
+- The `src` folder structure has been reorganized for better maintainability.  
 
-### 💥 New Feature: Explosion System
-- Implemented a new `HealthBar` class.
-- Each `Soldier` now has an associated `HealthBar` displayed above their head.
-- Added visual indicators showing the number of `Bullets` and `Grenades` the player has.
+### ❤️ New Feature: Health Bar System  
+- Implemented a new `HealthBar` class.  
+- Each soldier now has an associated health bar displayed above their head.  
+- Added visual indicators showing the number of bullets and grenades the player has.  
