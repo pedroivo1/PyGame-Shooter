@@ -10,35 +10,27 @@
 - Each soldier now has an associated health bar displayed above their head.  
 - Added visual indicators showing the number of bullets and grenades the player has.  
 
-
 classDiagram
-    direction LR
+Class01 <|-- AveryLongClass : Cool
+<<Interface>> Class01
+Class09 --> C2 : Where am I?
+Class09 --* C3
+Class09 --|> Class07
+Class07 : equals()
+Class07 : Object[] elementData
+Class01 : size()
+Class01 : int chimp
+Class01 : int gorilla
+class Class10 {
+  <<service>>
+  int id
+  size()
+}
 
-    class A {
-        +__init__(c: C)
-        +method_A()
-    }
 
-    class B {
-        +method_B()
-    }
-
-    class C {
-        +method_C()
-    }
-
-    class A1 {
-        +__init__()
-        +method_A1()
-    }
-
-    class A2 {
-        +__init__()
-        +method_A2()
-    }
-
-    A1 "1" --|> A : inherits
-    A2 "1" --|> A : inherits
-    A1 "1" --|> B : inherits
-    A2 "1" --|> B : inherits
-    A "1" -- "1" C : uses
+```mermaid
+graph TD;
+    HealthBox --|> ItemBox;
+    GrenadeBox --|> ItemBox;
+    BulletBox --|> ItemBox;
+```
