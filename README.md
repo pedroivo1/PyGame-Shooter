@@ -9,4 +9,3 @@
 - Implemented a new `HealthBar` class.  
 - Each soldier now has an associated health bar displayed above their head.  
 - Added visual indicators showing the number of bullets and grenades the player has.  
-
