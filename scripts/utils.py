@@ -69,7 +69,7 @@ class AnimationManager:
     def update(self, dt: float):
         self.timer += dt
         if self.timer >= self.frame_duration:
-            self.timer = 0
+            self.timer -= self.frame_duration
             self.frame = (self.frame + 1) % len(self.animations[self.action])
 
     def set_action(self, action: str):
