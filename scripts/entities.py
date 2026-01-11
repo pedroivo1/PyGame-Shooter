@@ -1,8 +1,10 @@
 import pygame
+import random
+from abc import ABC
 from .settings import *
 from .utils import AnimationManager
 
-class Soldier(pygame.sprite.Sprite):
+class Soldier(pygame.sprite.Sprite, ABC):
     def __init__(self, game, x, y, speed, color, ammo):
         super().__init__()
         self.game = game
@@ -15,7 +17,7 @@ class Soldier(pygame.sprite.Sprite):
         self.animations = {
             'idle': game.assets[f'{color}_idle'],
             'run':  game.assets[f'{color}_run'],
-            'jump':  game.assets[f'{color}_jump'],
+            'jump': game.assets[f'{color}_jump'],
             'death': game.assets[f'{color}_death']
         }
         self.anim_manager = AnimationManager(self.animations)
@@ -28,12 +30,6 @@ class Soldier(pygame.sprite.Sprite):
         self.on_ground = False
         self.pressed_jump = False
         self.facing_right = True
-
-    def update(self, dt, actions):
-        if self.alive:
-            self.move(dt, actions)
-            self.shoot(dt, actions)
-        self.animate(dt, actions)
 
     def move(self, dt, actions):
         dx = 0
@@ -56,7 +52,7 @@ class Soldier(pygame.sprite.Sprite):
             self.pressed_jump = False
 
         self.velocity_y += GRAVITY * dt
-        dy += self.velocity_y *dt
+        dy += self.velocity_y * dt
 
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
@@ -67,7 +63,7 @@ class Soldier(pygame.sprite.Sprite):
         self.rect.y += dy
 
     def animate(self, dt, actions):
-        if self.alive:
+        if self.alive_:
             if not self.on_ground:
                 self.anim_manager.set_action('jump')
             elif actions['left'] or actions['right']:
@@ -91,27 +87,73 @@ class Soldier(pygame.sprite.Sprite):
 
         if actions.get('shoot') and self.shoot_cooldown <= 0 and self.ammo != 0:
             self.ammo -= 1
-            self.game.actions['shoot'] = False
+            self.shoot_cooldown = 0.35
+            
             direction = 1 if self.facing_right else -1
-            x = self.rect.centerx + self.rect.width*direction*0.6
+            x = self.rect.centerx + self.rect.width * direction * 0.6
             y = self.rect.centery
             bullet = Bullet(self.game, x, y, direction)
             self.bullet_group.add(bullet)
             self.game.sfx['shot'].play()
 
     def take_damage(self, amount):
+        if not self.alive_: return
         self.health -= amount
         if self.health <= 0:
+            self.health = 0
+            self.alive_ = False
             self.anim_manager.set_action('death')
+
 
 class Player(Soldier):
     def __init__(self, game, x, y, speed, color, ammo):
         super().__init__(game, x, y, speed, color, ammo)
 
+    def update(self, dt, actions):
+        if self.alive_:
+            self.move(dt, actions)
+            self.shoot(dt, actions)
+        
+        self.animate(dt, actions)
+
 
 class Enemy(Soldier):
     def __init__(self, game, x, y, speed, color):
         super().__init__(game, x, y, speed, color, -1)
+        
+        self.move_counter = 0 
+        self.idling = False
+        self.idling_counter = 0
+
+    def update(self, dt):
+        
+        ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
+        
+        if self.alive_:
+            self.ai(ai_actions)
+            self.move(dt, ai_actions)
+            self.shoot(dt, ai_actions)
+
+        self.animate(dt, ai_actions)
+
+    def ai(self, ai_actions):
+            
+            if self.idling == False:
+                if self.facing_right:
+                    ai_actions['right'] = True
+                else:
+                    ai_actions['left'] = True
+                
+                self.move_counter += 1
+                if self.move_counter > 100:
+                    self.idling = True
+                    self.idling_counter = 0
+                    self.move_counter = 0
+            else:
+                self.idling_counter += 1
+                if self.idling_counter > 50:
+                    self.idling = False
+                    self.facing_right = not self.facing_right
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -126,6 +168,5 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.rect.x += (self.direction * self.speed) * dt
-
-        if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
+        if self.rect.right < 0 or self.rect.left > 800:
             self.kill()

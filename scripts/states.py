@@ -2,17 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import pygame
+from abc import ABC, abstractmethod
 from .settings import *
 from .entities import Player, Enemy
 
-class State:
+class State(ABC):
     def __init__(self, game):
         self.game = game
         self.prev_state = None
 
+    @abstractmethod
     def update(self, dt, actions):
         pass
 
+    @abstractmethod
     def draw(self, surface):
         pass
 
@@ -41,7 +44,7 @@ class Level(State):
         self.player_group.update(dt, actions)
         self.player.bullet_group.update(dt)
         
-        self.enemy_group.update(dt, actions)
+        self.enemy_group.update(dt)
 
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player.bullet_group, False, True)
         for enemy in hits:
