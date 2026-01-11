@@ -48,8 +48,7 @@ class Level(State):
 
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player.bullet_group, False, True)
         for enemy in hits:
-            enemy.take_damage(25) # Tira 25 de vida
-            print(f"Inimigo atingido! Vida restante: {enemy.health}")
+            enemy.take_damage(25)
 
     def draw(self, surface):
         surface.fill((144, 201, 120))

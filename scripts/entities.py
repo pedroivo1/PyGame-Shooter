@@ -1,5 +1,4 @@
 import pygame
-import random
 from abc import ABC
 from .settings import *
 from .utils import AnimationManager
@@ -12,7 +11,9 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.shoot_cooldown = 0.35
         self.ammo = ammo
         self.health = 100
+        self.max_health = self.health
         self.alive_ = True
+        self.death_timer = 0
 
         self.animations = {
             'idle': game.assets[f'{color}_idle'],
@@ -73,10 +74,17 @@ class Soldier(pygame.sprite.Sprite, ABC):
         else:
             self.anim_manager.set_action('death')
 
-        animation_finished = self.anim_manager.update(dt)
+        self.anim_manager.update(dt, loop=self.alive_)
 
-        if not self.alive_ and animation_finished:
-            self.kill()
+        if not self.alive_:
+            current_frame = self.anim_manager.frame
+            total_frames = len(self.anim_manager.animations['death'])
+            
+            if current_frame == total_frames - 1:
+                self.death_timer += dt
+
+                if self.death_timer > 2.0: 
+                    self.kill()
         
         current_img = self.anim_manager.get_image()
         self.image = pygame.transform.flip(current_img, not self.facing_right, False)
@@ -88,7 +96,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         if actions.get('shoot') and self.shoot_cooldown <= 0 and self.ammo != 0:
             self.ammo -= 1
             self.shoot_cooldown = 0.35
-            
+
             direction = 1 if self.facing_right else -1
             x = self.rect.centerx + self.rect.width * direction * 0.6
             y = self.rect.centery
@@ -130,7 +138,7 @@ class Enemy(Soldier):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         
         if self.alive_:
-            self.ai(ai_actions)
+            # self.ai(ai_actions)
             self.move(dt, ai_actions)
             self.shoot(dt, ai_actions)
 

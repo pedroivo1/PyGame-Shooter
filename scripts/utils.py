@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
 import pygame
 from pathlib import Path
 
@@ -13,7 +17,6 @@ BASE_LVL_PATH = ROOT_DIR / 'data' / 'levels'
 
 def load_image(path: str, scale: float = 1.0):
     full_path = BASE_IMG_PATH / path
-    print(full_path)
     try:
         img = pygame.image.load(full_path).convert_alpha()
         if scale != 1.0:
@@ -65,7 +68,7 @@ class AnimationManager:
         self.frame = 0
         self.timer = 0
 
-    def update(self, dt: float):
+    def update(self, dt: float, loop: bool = True):
         finished = False
         self.timer += dt
         
@@ -75,7 +78,11 @@ class AnimationManager:
             next_frame = self.frame + 1
             
             if next_frame >= len(self.animations[self.action]):
-                self.frame = 0
+                if loop:
+                    self.frame = 0
+                else:
+                    self.frame = len(self.animations[self.action]) - 1 # Sem loop: TRAVA no último
+                    
                 finished = True
             else:
                 self.frame = next_frame
