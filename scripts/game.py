@@ -27,9 +27,14 @@ class Game:
 
             'bullet': load_image('icons/bullet.png', 1.5),
 
-            'player_idle': load_images('player/idle', self.scale),
-            'player_run':  load_images('player/run', self.scale),
-            'player_jump':  load_images('player/jump', self.scale),
+            'green_death': load_images('soldiers/green/death', self.scale),
+            'green_idle': load_images('soldiers/green/idle', self.scale),
+            'green_jump':  load_images('soldiers/green/jump', self.scale),
+            'green_run':  load_images('soldiers/green/run', self.scale),
+            'red_death': load_images('soldiers/red/death', self.scale),
+            'red_idle': load_images('soldiers/red/idle', self.scale),
+            'red_jump':  load_images('soldiers/red/jump', self.scale),
+            'red_run':  load_images('soldiers/red/run', self.scale),
         }
 
         self.sfx = {
@@ -54,18 +59,19 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            
+
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE: self.running = False
                 if event.key == pygame.K_a: self.actions['left'] = True
                 if event.key == pygame.K_d: self.actions['right'] = True
                 if event.key == pygame.K_w: self.actions['jump'] = True
-                if event.key == pygame.K_ESCAPE: self.running = False
                 if event.key == pygame.K_SPACE: self.actions['shoot'] = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a: self.actions['left'] = False
                 if event.key == pygame.K_d: self.actions['right'] = False
                 if event.key == pygame.K_w: self.actions['jump'] = False
+                if event.key == pygame.K_SPACE: self.actions['shoot'] = False
 
     def update(self):
         if self.state_stack:

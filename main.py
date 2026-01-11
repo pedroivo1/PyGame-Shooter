@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from scripts.game import Game
-from scripts.level import Level
+from scripts.states import Level
 
 if __name__ == "__main__":
     g = Game()

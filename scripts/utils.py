@@ -7,14 +7,13 @@ from pathlib import Path
 # 3. .parent.parent é a raiz do projeto (onde está o main.py)
 ROOT_DIR = Path(__file__).parent.parent 
 
-# Ajustado conforme sua imagem:
 BASE_IMG_PATH = ROOT_DIR / 'data' / 'images'
 BASE_SND_PATH = ROOT_DIR / 'data' / 'audios'
 BASE_LVL_PATH = ROOT_DIR / 'data' / 'levels'
 
 def load_image(path: str, scale: float = 1.0):
     full_path = BASE_IMG_PATH / path
-    
+    print(full_path)
     try:
         img = pygame.image.load(full_path).convert_alpha()
         if scale != 1.0:
@@ -67,10 +66,21 @@ class AnimationManager:
         self.timer = 0
 
     def update(self, dt: float):
+        finished = False
         self.timer += dt
+        
         if self.timer >= self.frame_duration:
             self.timer -= self.frame_duration
-            self.frame = (self.frame + 1) % len(self.animations[self.action])
+            
+            next_frame = self.frame + 1
+            
+            if next_frame >= len(self.animations[self.action]):
+                self.frame = 0
+                finished = True
+            else:
+                self.frame = next_frame
+
+        return finished
 
     def set_action(self, action: str):
         if action != self.action:

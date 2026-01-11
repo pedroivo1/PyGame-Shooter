@@ -3,17 +3,20 @@ from .settings import *
 from .utils import AnimationManager
 
 class Soldier(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, speed):
+    def __init__(self, game, x, y, speed, color, ammo):
         super().__init__()
         self.game = game
         self.bullet_group = pygame.sprite.Group()
         self.shoot_cooldown = 0.35
-        self.ammo = 20
+        self.ammo = ammo
+        self.health = 100
+        self.alive_ = True
 
         self.animations = {
-            'idle': game.assets['player_idle'],
-            'run':  game.assets['player_run'],
-            'jump':  game.assets['player_jump'],
+            'idle': game.assets[f'{color}_idle'],
+            'run':  game.assets[f'{color}_run'],
+            'jump':  game.assets[f'{color}_jump'],
+            'death': game.assets[f'{color}_death']
         }
         self.anim_manager = AnimationManager(self.animations)
         self.image = self.anim_manager.get_image()
@@ -27,11 +30,12 @@ class Soldier(pygame.sprite.Sprite):
         self.facing_right = True
 
     def update(self, dt, actions):
-        self.move(actions, dt)
+        if self.alive:
+            self.move(dt, actions)
+            self.shoot(dt, actions)
         self.animate(dt, actions)
-        self.shoot(actions, dt)
 
-    def move(self, actions, dt):
+    def move(self, dt, actions):
         dx = 0
         dy = 0
         
@@ -63,23 +67,29 @@ class Soldier(pygame.sprite.Sprite):
         self.rect.y += dy
 
     def animate(self, dt, actions):
-        if not self.on_ground:
-            self.anim_manager.set_action('jump')
-        elif actions['left'] or actions['right']:
-            self.anim_manager.set_action('run')
+        if self.alive:
+            if not self.on_ground:
+                self.anim_manager.set_action('jump')
+            elif actions['left'] or actions['right']:
+                self.anim_manager.set_action('run')
+            else:
+                self.anim_manager.set_action('idle')
         else:
-            self.anim_manager.set_action('idle')
+            self.anim_manager.set_action('death')
 
-        self.anim_manager.update(dt)
+        animation_finished = self.anim_manager.update(dt)
+
+        if not self.alive_ and animation_finished:
+            self.kill()
         
         current_img = self.anim_manager.get_image()
         self.image = pygame.transform.flip(current_img, not self.facing_right, False)
 
-    def shoot(self, actions, dt):
+    def shoot(self, dt, actions):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= dt
 
-        if actions.get('shoot') and self.shoot_cooldown <= 0 and self.ammo > 0:
+        if actions.get('shoot') and self.shoot_cooldown <= 0 and self.ammo != 0:
             self.ammo -= 1
             self.game.actions['shoot'] = False
             direction = 1 if self.facing_right else -1
@@ -88,6 +98,20 @@ class Soldier(pygame.sprite.Sprite):
             bullet = Bullet(self.game, x, y, direction)
             self.bullet_group.add(bullet)
             self.game.sfx['shot'].play()
+
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            self.anim_manager.set_action('death')
+
+class Player(Soldier):
+    def __init__(self, game, x, y, speed, color, ammo):
+        super().__init__(game, x, y, speed, color, ammo)
+
+
+class Enemy(Soldier):
+    def __init__(self, game, x, y, speed, color):
+        super().__init__(game, x, y, speed, color, -1)
 
 
 class Bullet(pygame.sprite.Sprite):
