@@ -26,6 +26,7 @@ class Game:
             'exit_btn':  load_image('exit_btn.png'),
 
             'bullet': load_image('icons/bullet.png', 1.5),
+            'grenade': load_image('icons/grenade.png', 1.5),
 
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),
@@ -66,12 +67,14 @@ class Game:
                 if event.key == pygame.K_d: self.actions['right'] = True
                 if event.key == pygame.K_w: self.actions['jump'] = True
                 if event.key == pygame.K_SPACE: self.actions['shoot'] = True
+                if event.key == pygame.K_q: self.actions['grenade'] = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a: self.actions['left'] = False
                 if event.key == pygame.K_d: self.actions['right'] = False
                 if event.key == pygame.K_w: self.actions['jump'] = False
                 if event.key == pygame.K_SPACE: self.actions['shoot'] = False
+                if event.key == pygame.K_q: self.actions['grenade'] = False
 
     def update(self):
         if self.state_stack:

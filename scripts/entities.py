@@ -8,6 +8,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         super().__init__()
         self.game = game
         self.bullet_group = pygame.sprite.Group()
+        self.grenade_group = pygame.sprite.Group()
         self.shoot_cooldown = 0.35
         self.ammo = ammo
         self.health = 100
@@ -31,6 +32,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.on_ground = False
         self.pressed_jump = False
         self.facing_right = True
+        self.direction = 1
 
     def move(self, dt, actions):
         dx = 0
@@ -39,9 +41,11 @@ class Soldier(pygame.sprite.Sprite, ABC):
         if actions['left']:
             dx = -self.speed * dt
             self.facing_right = False
+            self.direction = -1
         if actions['right']:
             dx = self.speed * dt
             self.facing_right = True
+            self.direction = 1
 
         if actions['jump'] and self.on_ground and not self.pressed_jump:
             self.velocity_y = JUMP_FORCE
@@ -97,10 +101,9 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.ammo -= 1
             self.shoot_cooldown = 0.35
 
-            direction = 1 if self.facing_right else -1
-            x = self.rect.centerx + self.rect.width * direction * 0.6
+            x = self.rect.centerx + self.rect.width * self.direction * 0.6
             y = self.rect.centery
-            bullet = Bullet(self.game, x, y, direction)
+            bullet = Bullet(self.game, x, y, self.direction)
             self.bullet_group.add(bullet)
             self.game.sfx['shot'].play()
 
@@ -121,8 +124,16 @@ class Player(Soldier):
         if self.alive_:
             self.move(dt, actions)
             self.shoot(dt, actions)
+            self.throw_grenade(dt, actions)
         
         self.animate(dt, actions)
+
+    def throw_grenade(self, dt, actions):
+        if actions.get('grenade'):
+            x = self.rect.centerx + self.rect.width * self.direction * 0.4
+            y = self.rect.centery - self.rect.height * 0.35
+            grenade = Grenade(self.game, x, y, self.direction)
+            self.grenade_group.add(grenade)
 
 
 class Enemy(Soldier):
@@ -168,7 +179,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction):
         super().__init__()
         self.game = game
-        self.speed = 600
+        self.speed = 650
         self.image = game.assets['bullet']
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -178,3 +189,32 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.x += (self.direction * self.speed) * dt
         if self.rect.right < 0 or self.rect.left > 800:
             self.kill()
+
+
+class Grenade(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, direction):
+        super().__init__()
+
+        self.timer = 3.0
+        self.velocity_y = -300
+        self.game = game
+        self.speed = 450
+        self.image = game.assets['grenade']
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.direction = direction
+
+    # def update(self, dt):
+    #     dy = 0
+    #     dx = 0
+
+    #     dx += (self.direction * self.speed) * dt
+    #     self.velocity_y += GRAVITY * dt
+    #     dy += self.velocity_y * dt
+
+    #     if self.rect.bottom + dy > 300:
+    #         dy = 300 - self.rect.bottom
+    #         self.velocity_y = 0
+
+    #     self.rect.x += dx
+    #     self.rect.y += dy

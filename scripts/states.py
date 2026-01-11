@@ -43,7 +43,8 @@ class Level(State):
     def update(self, dt, actions):
         self.player_group.update(dt, actions)
         self.player.bullet_group.update(dt)
-        
+        self.player.grenade_group.update(dt)
+
         self.enemy_group.update(dt)
 
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player.bullet_group, False, True)
@@ -55,4 +56,5 @@ class Level(State):
         pygame.draw.line(surface, (255, 0, 0), (0, 300), (800, 300))
         self.player_group.draw(surface)
         self.player.bullet_group.draw(surface)
+        self.player.grenade_group.draw(surface)
         self.enemy_group.draw(surface)
