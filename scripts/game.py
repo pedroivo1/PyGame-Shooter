@@ -24,12 +24,12 @@ class Game:
         self.assets = {
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
-            
+
+            'bullet': load_image('icons/bullet.png', 1.5),
+
             'player_idle': load_images('player/idle', self.scale),
             'player_run':  load_images('player/run', self.scale),
             'player_jump':  load_images('player/jump', self.scale),
-            
-            'bg_menu': load_image('background/menu_bg.png'), 
         }
 
         self.sfx = {
@@ -38,12 +38,12 @@ class Game:
             'grenade': load_sound('grenade.wav')
         }
 
-        # try:
-        #     pygame.mixer.music.load('data/audios/music2.mp3')
-        #     pygame.mixer.music.set_volume(0.3)
-        #     pygame.mixer.music.play(-1)
-        # except Exception as e:
-        #     print("Erro ao carregar música:", e)
+        try:
+            pygame.mixer.music.load('data/audios/music2.mp3')
+            pygame.mixer.music.set_volume(0.3)
+            pygame.mixer.music.play(-1)
+        except Exception as e:
+            print("Erro ao carregar música:", e)
 
     def get_dt(self):
         now = time.time()
@@ -59,13 +59,13 @@ class Game:
                 if event.key == pygame.K_a: self.actions['left'] = True
                 if event.key == pygame.K_d: self.actions['right'] = True
                 if event.key == pygame.K_w: self.actions['jump'] = True
-                if event.key == pygame.K_p: self.actions['pause'] = True
+                if event.key == pygame.K_ESCAPE: self.running = False
+                if event.key == pygame.K_SPACE: self.actions['shoot'] = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a: self.actions['left'] = False
                 if event.key == pygame.K_d: self.actions['right'] = False
                 if event.key == pygame.K_w: self.actions['jump'] = False
-                if event.key == pygame.K_p: self.actions['pause'] = False
 
     def update(self):
         if self.state_stack:
