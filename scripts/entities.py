@@ -8,7 +8,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
         super().__init__()
         self.game = game
         self.bullet_group = pygame.sprite.Group()
-        self.grenade_group = pygame.sprite.Group()
         self.shoot_cooldown = 0.35
         self.ammo = ammo
         self.health = 100
@@ -119,8 +118,10 @@ class Soldier(pygame.sprite.Sprite, ABC):
 class Player(Soldier):
     def __init__(self, game, x, y, speed, color, ammo, grenade):
         super().__init__(game, x, y, speed, color, ammo)
+        self.grenade_group = pygame.sprite.Group()
         self.grenade_cooldown = 0.35
         self.grenade = grenade
+        self.explosion_group = pygame.sprite.Group()
 
     def update(self, dt, actions):
         if self.alive_:
@@ -140,7 +141,7 @@ class Player(Soldier):
             self.grenade -= 1
             x = self.rect.centerx + self.rect.width * self.direction * 0.4
             y = self.rect.centery - self.rect.height * 0.35
-            grenade = Grenade(self.game, x, y, self.direction)
+            grenade = Grenade(self.game, x, y, self.direction, self)
             self.grenade_group.add(grenade)
 
 
@@ -184,11 +185,12 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Grenade(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, direction):
+    def __init__(self, game, x, y, direction, player):
         super().__init__()
         self.game = game
+        self.player = player
 
-        self.timer = 3.0
+        self.timer = 1.2
         self.velocity_y = -550
         self.speed = 480
         self.image = game.assets['grenade']
@@ -198,6 +200,12 @@ class Grenade(pygame.sprite.Sprite):
         self.COR = 0.4
 
     def update(self, dt):
+        self.timer -= dt
+        if self.timer < 0:
+            explosion = Explosion(self.game, self.rect.x, self.rect.y)
+            self.player.explosion_group.add(explosion)
+            self.kill()
+
         dx = (self.direction * self.speed) * dt
         self.rect.x += dx 
         if self.rect.left < 0:
@@ -217,3 +225,27 @@ class Grenade(pygame.sprite.Sprite):
             self.speed *= 0.8
         else:
             self.rect.y += dy 
+
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        super().__init__()
+        self.game = game
+        self.hit_list = []
+        self.damage = 80
+
+        self.animations = {
+            'explosion': game.assets['explosion'],
+        }
+        self.anim_manager = AnimationManager(self.animations, action = 'explosion')
+        self.image = self.anim_manager.get_image()
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+
+    def update(self, dt):
+        finished = self.anim_manager.update(dt, loop=False)
+        self.image = self.anim_manager.get_image()
+
+        if finished:
+            self.kill()

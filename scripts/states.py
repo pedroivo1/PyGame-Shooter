@@ -40,16 +40,30 @@ class Level(State):
         enemy1 = Enemy(game, 500, 350, 300, 'red')
         self.enemy_group.add(enemy1)
 
+
     def update(self, dt, actions):
         self.player_group.update(dt, actions)
         self.player.bullet_group.update(dt)
         self.player.grenade_group.update(dt)
-
+        self.player.explosion_group.update(dt)
         self.enemy_group.update(dt)
 
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player.bullet_group, False, True)
         for enemy in hits:
             enemy.take_damage(25)
+
+        exp_hits = pygame.sprite.groupcollide(self.player.explosion_group, self.enemy_group, False, False)
+        for explosion, enemies_hit in exp_hits.items():
+            for enemy in enemies_hit:
+                if enemy not in explosion.hit_list:
+                    enemy.take_damage(explosion.damage)
+                    explosion.hit_list.append(enemy)
+
+        player_hit = pygame.sprite.spritecollide(self.player, self.player.explosion_group, False)
+        for explosion in player_hit:
+             if self.player not in explosion.hit_list:
+                 self.player.take_damage(explosion.damage)
+                 explosion.hit_list.append(self.player)
 
     def draw(self, surface):
         surface.fill((144, 201, 120))
@@ -58,5 +72,6 @@ class Level(State):
         self.player_group.draw(surface)
         self.player.bullet_group.draw(surface)
         self.player.grenade_group.draw(surface)
+        self.player.explosion_group.draw(surface)
 
         self.enemy_group.draw(surface)

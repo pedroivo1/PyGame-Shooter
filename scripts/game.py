@@ -27,6 +27,7 @@ class Game:
 
             'bullet': load_image('icons/bullet.png', 1.5),
             'grenade': load_image('icons/grenade.png', 1.5),
+            'explosion': load_images('explosion', 1.5),
 
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),

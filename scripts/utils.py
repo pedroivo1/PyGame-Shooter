@@ -61,10 +61,10 @@ def load_sound(path: str, volume: float = 1.0):
 
 
 class AnimationManager:
-    def __init__(self, animations: dict, frame_duration: float = 0.12):
+    def __init__(self, animations: dict, frame_duration: float = 0.12, action = 'idle'):
         self.animations = animations 
         self.frame_duration = frame_duration 
-        self.action = 'idle'
+        self.action = action
         self.frame = 0
         self.timer = 0
 
