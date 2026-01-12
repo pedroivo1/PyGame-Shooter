@@ -33,7 +33,7 @@ class Level(State):
         super().__init__(game)
 
         self.player_group = pygame.sprite.GroupSingle()
-        self.player = Player(game, 200, 200, 300, 'green', 20)
+        self.player = Player(game, 200, 200, 300, 'green', 20, 5)
         self.player_group.add(self.player)
 
         self.enemy_group = pygame.sprite.Group()
@@ -54,7 +54,9 @@ class Level(State):
     def draw(self, surface):
         surface.fill((144, 201, 120))
         pygame.draw.line(surface, (255, 0, 0), (0, 300), (800, 300))
+        
         self.player_group.draw(surface)
         self.player.bullet_group.draw(surface)
         self.player.grenade_group.draw(surface)
+
         self.enemy_group.draw(surface)

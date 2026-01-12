@@ -117,19 +117,27 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, game, x, y, speed, color, ammo):
+    def __init__(self, game, x, y, speed, color, ammo, grenade):
         super().__init__(game, x, y, speed, color, ammo)
+        self.grenade_cooldown = 0.35
+        self.grenade = grenade
 
     def update(self, dt, actions):
         if self.alive_:
             self.move(dt, actions)
             self.shoot(dt, actions)
             self.throw_grenade(dt, actions)
-        
+
         self.animate(dt, actions)
 
     def throw_grenade(self, dt, actions):
-        if actions.get('grenade'):
+        if self.grenade_cooldown > 0:
+            self.grenade_cooldown -= dt
+
+        if actions.get('grenade') and self.grenade_cooldown <= 0 and self.grenade and self.game.actions['relesed_q']:
+            self.game.actions['relesed_q'] = False
+            self.grenade_cooldown = 0.35
+            self.grenade -= 1
             x = self.rect.centerx + self.rect.width * self.direction * 0.4
             y = self.rect.centery - self.rect.height * 0.35
             grenade = Grenade(self.game, x, y, self.direction)
@@ -149,30 +157,14 @@ class Enemy(Soldier):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         
         if self.alive_:
-            # self.ai(ai_actions)
+            self.ai(ai_actions)
             self.move(dt, ai_actions)
             self.shoot(dt, ai_actions)
 
         self.animate(dt, ai_actions)
 
     def ai(self, ai_actions):
-            
-            if self.idling == False:
-                if self.facing_right:
-                    ai_actions['right'] = True
-                else:
-                    ai_actions['left'] = True
-                
-                self.move_counter += 1
-                if self.move_counter > 100:
-                    self.idling = True
-                    self.idling_counter = 0
-                    self.move_counter = 0
-            else:
-                self.idling_counter += 1
-                if self.idling_counter > 50:
-                    self.idling = False
-                    self.facing_right = not self.facing_right
+        pass
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -194,27 +186,34 @@ class Bullet(pygame.sprite.Sprite):
 class Grenade(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction):
         super().__init__()
+        self.game = game
 
         self.timer = 3.0
-        self.velocity_y = -300
-        self.game = game
-        self.speed = 450
+        self.velocity_y = -550
+        self.speed = 480
         self.image = game.assets['grenade']
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.direction = direction
+        self.COR = 0.4
 
-    # def update(self, dt):
-    #     dy = 0
-    #     dx = 0
+    def update(self, dt):
+        dx = (self.direction * self.speed) * dt
+        self.rect.x += dx 
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.direction *= -1
+            self.speed *= self.COR
+        elif self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+            self.direction *= -1 
+            self.speed *= self.COR 
 
-    #     dx += (self.direction * self.speed) * dt
-    #     self.velocity_y += GRAVITY * dt
-    #     dy += self.velocity_y * dt
-
-    #     if self.rect.bottom + dy > 300:
-    #         dy = 300 - self.rect.bottom
-    #         self.velocity_y = 0
-
-    #     self.rect.x += dx
-    #     self.rect.y += dy
+        self.velocity_y += GRAVITY * dt
+        dy = self.velocity_y * dt
+        if self.rect.bottom + dy > 300:
+            self.rect.bottom = 300
+            self.velocity_y = -(self.velocity_y * self.COR)
+            self.speed *= 0.8
+        else:
+            self.rect.y += dy 

@@ -18,7 +18,7 @@ class Game:
 
         self.dt = 0
         self.prev_time = time.time()
-        self.actions = {"left": False, "right": False, "jump": False, "pause": False}
+        self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True}
         self.scale = 2.5
 
         self.assets = {
@@ -74,7 +74,10 @@ class Game:
                 if event.key == pygame.K_d: self.actions['right'] = False
                 if event.key == pygame.K_w: self.actions['jump'] = False
                 if event.key == pygame.K_SPACE: self.actions['shoot'] = False
-                if event.key == pygame.K_q: self.actions['grenade'] = False
+                
+                if event.key == pygame.K_q: 
+                    self.actions['grenade'] = False
+                    self.actions['relesed_q'] = True
 
     def update(self):
         if self.state_stack:
