@@ -27,7 +27,6 @@ class State(ABC):
     def exit_state(self):
         self.game.state_stack.pop()
 
-
 class Level(State):
     def __init__(self, game):
         super().__init__(game)
@@ -40,7 +39,6 @@ class Level(State):
         enemy1 = Enemy(game, 500, 350, 300, 'red')
         self.enemy_group.add(enemy1)
 
-
     def update(self, dt, actions):
         self.player_group.update(dt, actions)
         self.player.bullet_group.update(dt)
@@ -48,6 +46,10 @@ class Level(State):
         self.player.explosion_group.update(dt)
         self.enemy_group.update(dt)
 
+        self._check_collisions()
+
+    def _check_collisions(self):
+        
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player.bullet_group, False, True)
         for enemy in hits:
             enemy.take_damage(25)
@@ -67,11 +69,10 @@ class Level(State):
 
     def draw(self, surface):
         surface.fill((144, 201, 120))
-        pygame.draw.line(surface, (255, 0, 0), (0, 300), (800, 300))
+        pygame.draw.line(surface, RED, (0, FLOOR_Y), (SCREEN_WIDTH, FLOOR_Y))
         
         self.player_group.draw(surface)
         self.player.bullet_group.draw(surface)
         self.player.grenade_group.draw(surface)
         self.player.explosion_group.draw(surface)
-
         self.enemy_group.draw(surface)

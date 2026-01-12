@@ -13,26 +13,30 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.running = True
-
         self.state_stack = []
 
         self.dt = 0
         self.prev_time = time.time()
-        self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True}
+        self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}
         self.scale = 2.5
 
+        self.load_assets()
+        self.play_music()
+
+    def load_assets(self):
+        """Carrega todos os assets em um método separado para limpar o __init__"""
         self.assets = {
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
-
             'bullet': load_image('icons/bullet.png', 1.5),
             'grenade': load_image('icons/grenade.png', 1.5),
             'explosion': load_images('explosion', 1.5),
-
+            
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),
             'green_jump':  load_images('soldiers/green/jump', self.scale),
             'green_run':  load_images('soldiers/green/run', self.scale),
+            
             'red_death': load_images('soldiers/red/death', self.scale),
             'red_idle': load_images('soldiers/red/idle', self.scale),
             'red_jump':  load_images('soldiers/red/jump', self.scale),
@@ -45,6 +49,7 @@ class Game:
             'grenade': load_sound('grenade.wav')
         }
 
+    def play_music(self):
         try:
             pygame.mixer.music.load('data/audios/music2.mp3')
             pygame.mixer.music.set_volume(0.3)
