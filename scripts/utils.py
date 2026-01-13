@@ -63,7 +63,7 @@ class AnimationManager:
     def update(self, dt: float, loop: bool = True) -> bool:
         finished = False
         self.timer += dt
-        
+
         if self.timer >= self.frame_duration:
             self.timer %= self.frame_duration
             next_frame = self.frame + 1

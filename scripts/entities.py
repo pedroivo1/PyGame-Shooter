@@ -156,37 +156,37 @@ class Enemy(Soldier):
     def update(self, dt):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         if self.alive_:
-            self.ai(ai_actions)
+            self.ai(dt, ai_actions)
             self.move(dt, ai_actions)
             self.shoot(dt, ai_actions)
         self.animate(dt, ai_actions)
 
-    def ai(self, ai_actions):
+    def ai(self, dt, ai_actions):
         if not self.idling:
             if self.facing_right:
                 ai_actions['right'] = True
             else:
                 ai_actions['left'] = True
             
-            self.move_counter += 1
-            if self.move_counter > 100:
+            self.move_counter += dt
+            if self.move_counter > 1:
                 self.idling = True
                 self.idling_counter = 0
                 self.move_counter = 0
         else:
-            self.idling_counter += 1
-            if self.idling_counter > 50:
+            self.idling_counter += dt
+            if self.idling_counter > 2:
                 self.idling = False
                 self.facing_right = not self.facing_right
 
 
 class ItemBox(pygame.sprite.Sprite):
     def __init__(self, game, type, x, y, group):
-        super.__init__(group)
+        super().__init__(group)
         self.type = type
         self.image = game.assets[self.type]
         self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.heigth)
+        self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.height)
 
 
 class Bullet(pygame.sprite.Sprite):

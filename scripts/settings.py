@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Screen
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 1500
 SCREEN_HEIGHT = 600
 FPS = 60
 TITLE = "My Pygame Framework"
@@ -16,7 +16,7 @@ RED = (230, 20, 10)
 # Physics
 GRAVITY = 2600
 JUMP_FORCE = -650
-FLOOR_Y = 300 # Define a altura do chão globalmente
+FLOOR_Y = 300
 
 # Gameplay
 GRENADE_TIMER = 1.2

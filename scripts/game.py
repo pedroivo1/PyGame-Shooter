@@ -25,14 +25,18 @@ class Game:
         self.play_music()
 
     def load_assets(self):
-        """Carrega todos os assets em um método separado para limpar o __init__"""
         self.assets = {
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
+
+            'ammo_box': load_image('icons/ammo_box.png'),
+            'grenade_box': load_image('icons/grenade_box.png'),
+            'health_box': load_image('icons/health_box.png'),
+
             'bullet': load_image('icons/bullet.png', 1.5),
             'grenade': load_image('icons/grenade.png', 1.5),
             'explosion': load_images('explosion', 1.5),
-            
+
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),
             'green_jump':  load_images('soldiers/green/jump', self.scale),
