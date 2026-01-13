@@ -108,12 +108,12 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, game, x, y, speed, color, ammo, grenade_count):
+    def __init__(self, game, x, y, speed, color, ammo, grenade):
         super().__init__(game, x, y, speed, color, ammo)
         self.grenade_group = pygame.sprite.Group()
         self.explosion_group = pygame.sprite.Group()
         
-        self.grenade_count = grenade_count
+        self.grenade = grenade
         self.grenade_cooldown = 0.0
 
     def update(self, dt, actions):
@@ -129,12 +129,12 @@ class Player(Soldier):
 
         if (actions.get('grenade') and 
             self.grenade_cooldown <= 0 and 
-            self.grenade_count > 0 and 
+            self.grenade > 0 and 
             self.game.actions['relesed_q']):
             
             self.game.actions['relesed_q'] = False
             self.grenade_cooldown = 0.35
-            self.grenade_count -= 1
+            self.grenade -= 1
             
             offset_x = self.rect.width * self.direction * 0.4
             offset_y = -self.rect.height * 0.35
@@ -188,7 +188,16 @@ class ItemBox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.height)
 
-
+    def update(self, player):
+        if pygame.sprite.collide_rect(self, player):
+            if self.type == 'health_box':
+                player.health += 25
+            elif self.type == 'ammo_box':
+                player.ammo += 5
+            elif self.type == 'grenade_box':
+                player.grenade += 2
+            self.kill()
+    
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction, group):
         super().__init__(group)

@@ -33,9 +33,9 @@ class Level(State):
     def __init__(self, game):
         super().__init__(game)
         self.item_box_group = pygame.sprite.Group()
-        health = ItemBox(game, 'health_box', 900, 250, self.item_box_group)
-        ammo = ItemBox(game, 'ammo_box', 940, 250, self.item_box_group)
-        ammo = ItemBox(game, 'ammo_box', 980, 250, self.item_box_group)
+        health = ItemBox(game, 'health_box', 900, 260, self.item_box_group)
+        ammo = ItemBox(game, 'ammo_box', 940, 260, self.item_box_group)
+        grenade = ItemBox(game, 'grenade_box', 980, 260, self.item_box_group)
 
         self.player_group = pygame.sprite.GroupSingle()
         self.player = Player(game, 200, 200, 300, 'blue', 20, 5)
@@ -51,7 +51,7 @@ class Level(State):
         self.player.grenade_group.update(dt)
         self.player.explosion_group.update(dt)
         self.enemy_group.update(dt)
-        self.item_box_group.update(dt)
+        self.item_box_group.update(self.player)
 
         self._check_collisions()
 
