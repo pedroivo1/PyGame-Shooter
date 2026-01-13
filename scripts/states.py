@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from .settings import *
 from .entities import Player, Enemy
 
+
 class State(ABC):
     def __init__(self, game):
         self.game = game
@@ -27,12 +28,14 @@ class State(ABC):
     def exit_state(self):
         self.game.state_stack.pop()
 
+
 class Level(State):
     def __init__(self, game):
         super().__init__(game)
+        helth_box_group = pygame.sprite.Group()
 
         self.player_group = pygame.sprite.GroupSingle()
-        self.player = Player(game, 200, 200, 300, 'green', 20, 5)
+        self.player = Player(game, 200, 200, 300, 'blue', 20, 5)
         self.player_group.add(self.player)
 
         self.enemy_group = pygame.sprite.Group()
@@ -61,7 +64,7 @@ class Level(State):
                     enemy.take_damage(explosion.damage)
                     explosion.hit_list.append(enemy)
 
-        player_hit = pygame.sprite.spritecollide(self.player, self.player.explosion_group, False)
+        player_hit = pygame.sprite.groupcollide(self.player.explosion_group, self.player_group, False, False)
         for explosion in player_hit:
              if self.player not in explosion.hit_list:
                  self.player.take_damage(explosion.damage)

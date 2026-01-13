@@ -12,6 +12,7 @@ ROOT_DIR = Path(__file__).parent.parent
 BASE_IMG_PATH = ROOT_DIR / 'data' / 'images'
 BASE_SND_PATH = ROOT_DIR / 'data' / 'audios'
 
+
 def load_image(path: str | Path, scale: float = 1.0) -> pygame.Surface:
     full_path = BASE_IMG_PATH / path
     try:
@@ -26,6 +27,7 @@ def load_image(path: str | Path, scale: float = 1.0) -> pygame.Surface:
         surf.fill((255, 0, 255))
         return surf
 
+
 def load_images(path: str, scale: float = 1.0) -> list[pygame.Surface]:
     folder_path = BASE_IMG_PATH / path
     if not folder_path.exists():
@@ -38,6 +40,7 @@ def load_images(path: str, scale: float = 1.0) -> list[pygame.Surface]:
         images.append(load_image(rel_path, scale))
     return images
 
+
 def load_sound(path: str, volume: float = 1.0) -> pygame.mixer.Sound | None:
     full_path = BASE_SND_PATH / path
     try:
@@ -47,6 +50,7 @@ def load_sound(path: str, volume: float = 1.0) -> pygame.mixer.Sound | None:
     except FileNotFoundError:
         logger.error(f"Audio file not found: {full_path}")
         return None
+
 
 class AnimationManager:
     def __init__(self, animations: dict, frame_duration: float = 0.12, action='idle'):

@@ -6,6 +6,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 FPS = 60
 TITLE = "My Pygame Framework"
+TILE_SIZE = 40
 
 # Colors
 BG_COLOR = (30, 30, 30)

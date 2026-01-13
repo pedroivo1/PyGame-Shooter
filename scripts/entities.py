@@ -3,6 +3,7 @@ from abc import ABC
 from .settings import *
 from .utils import AnimationManager
 
+
 class Soldier(pygame.sprite.Sprite, ABC):
     def __init__(self, game, x, y, speed, color, ammo):
         super().__init__()
@@ -12,15 +13,12 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.health = 100
         self.alive_ = True
         
-        # Cooldowns e Timers
         self.shoot_cooldown = 0.0
         self.shoot_delay = 0.35
         self.death_timer = 0.0
 
-        # Grupos de projéteis (Dica: idealmente isso estaria no Level, mas mantive aqui para sua estrutura)
         self.bullet_group = pygame.sprite.Group()
 
-        # Animação
         self.animations = {
             'idle': game.assets[f'{color}_idle'],
             'run':  game.assets[f'{color}_run'],
@@ -31,7 +29,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.image = self.anim_manager.get_image()
         self.rect = self.image.get_rect(center=(x, y))
 
-        # Movimento
         self.velocity_y = 0
         self.on_ground = False
         self.facing_right = True
@@ -42,7 +39,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
         dx = 0
         dy = 0
         
-        # Movimento Horizontal
         if actions['left']:
             dx = -self.speed * dt
             self.facing_right = False
@@ -52,7 +48,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.facing_right = True
             self.direction = 1
 
-        # Pulo
         if actions['jump'] and self.on_ground and not self.pressed_jump:
             self.velocity_y = JUMP_FORCE
             self.on_ground = False
@@ -62,11 +57,9 @@ class Soldier(pygame.sprite.Sprite, ABC):
         if not actions['jump']:
             self.pressed_jump = False
 
-        # Gravidade
         self.velocity_y += GRAVITY * dt
         dy += self.velocity_y * dt
 
-        # Colisão com o chão (Usando constante FLOOR_Y)
         if self.rect.bottom + dy > FLOOR_Y:
             dy = FLOOR_Y - self.rect.bottom
             self.velocity_y = 0
@@ -89,7 +82,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.anim_manager.update(dt, loop=self.alive_)
         self.image = pygame.transform.flip(self.anim_manager.get_image(), not self.facing_right, False)
 
-        # Lógica de desaparecer após morrer
         if not self.alive_ and self.anim_manager.frame == len(self.anim_manager.animations['death']) - 1:
             self.death_timer += dt
             if self.death_timer > 2.0: 
@@ -103,7 +95,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.ammo -= 1
             self.shoot_cooldown = self.shoot_delay
             
-            # Posição do tiro ajustada
             offset_x = self.rect.width * self.direction * 0.6
             Bullet(self.game, self.rect.centerx + offset_x, self.rect.centery, self.direction, self.bullet_group)
             self.game.sfx['shot'].play()
@@ -114,6 +105,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         if self.health <= 0:
             self.health = 0
             self.alive_ = False
+
 
 class Player(Soldier):
     def __init__(self, game, x, y, speed, color, ammo, grenade_count):
@@ -135,7 +127,6 @@ class Player(Soldier):
         if self.grenade_cooldown > 0:
             self.grenade_cooldown -= dt
 
-        # Verifica: Tecla Q + Cooldown zerado + Tem granada + Gatilho solto
         if (actions.get('grenade') and 
             self.grenade_cooldown <= 0 and 
             self.grenade_count > 0 and 
@@ -153,6 +144,7 @@ class Player(Soldier):
                     self.rect.centery + offset_y, 
                     self.direction, 
                     self)
+
 
 class Enemy(Soldier):
     def __init__(self, game, x, y, speed, color):
@@ -187,6 +179,16 @@ class Enemy(Soldier):
                 self.idling = False
                 self.facing_right = not self.facing_right
 
+
+class ItemBox(pygame.sprite.Sprite):
+    def __init__(self, game, type, x, y, group):
+        super.__init__(group)
+        self.type = type
+        self.image = game.assets[self.type]
+        self.rect = self.image.get_rect()
+        self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.heigth)
+
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction, group):
         super().__init__(group)
@@ -200,6 +202,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.x += (self.direction * self.speed) * dt
         if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
             self.kill()
+
 
 class Grenade(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction, player):

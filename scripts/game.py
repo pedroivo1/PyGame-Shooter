@@ -6,6 +6,7 @@ import time
 from .settings import *
 from scripts.utils import load_image, load_images, load_sound
 
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -15,7 +16,7 @@ class Game:
         self.running = True
         self.state_stack = []
 
-        self.dt = 0
+        self.dt = time.time()
         self.prev_time = time.time()
         self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}
         self.scale = 2.5
@@ -36,7 +37,12 @@ class Game:
             'green_idle': load_images('soldiers/green/idle', self.scale),
             'green_jump':  load_images('soldiers/green/jump', self.scale),
             'green_run':  load_images('soldiers/green/run', self.scale),
-            
+
+            'blue_death': load_images('soldiers/blue/death', self.scale),
+            'blue_idle': load_images('soldiers/blue/idle', self.scale),
+            'blue_jump':  load_images('soldiers/blue/jump', self.scale),
+            'blue_run':  load_images('soldiers/blue/run', self.scale),
+
             'red_death': load_images('soldiers/red/death', self.scale),
             'red_idle': load_images('soldiers/red/idle', self.scale),
             'red_jump':  load_images('soldiers/red/jump', self.scale),
