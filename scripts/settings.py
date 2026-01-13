@@ -11,6 +11,7 @@ TILE_SIZE = 40
 # Colors
 BG_COLOR = (30, 30, 30)
 WHITE = (255, 255, 255)
+GRAY = (230, 230, 230)
 RED = (230, 20, 10)
 
 # Physics
@@ -22,3 +23,7 @@ FLOOR_Y = 300
 GRENADE_TIMER = 1.2
 GRENADE_SPEED = 480
 GRENADE_BOUNCE = 0.4
+
+# Font
+FONT_NAME = 'Futura'
+FONT_SIZE = 32

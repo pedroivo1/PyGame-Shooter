@@ -5,6 +5,7 @@ import pygame
 from abc import ABC, abstractmethod
 from .settings import *
 from .entities import Player, Enemy, ItemBox
+from .utils import draw_text
 
 
 class State(ABC):
@@ -32,6 +33,7 @@ class State(ABC):
 class Level(State):
     def __init__(self, game):
         super().__init__(game)
+        self.game = game
         self.item_box_group = pygame.sprite.Group()
         health = ItemBox(game, 'health_box', 900, 260, self.item_box_group)
         ammo = ItemBox(game, 'ammo_box', 940, 260, self.item_box_group)
@@ -77,7 +79,17 @@ class Level(State):
     def draw(self, surface):
         surface.fill((144, 201, 120))
         pygame.draw.line(surface, RED, (0, FLOOR_Y), (SCREEN_WIDTH, FLOOR_Y))
-        
+
+        # draw_text(f'AMMO', self.game.font, GRAY, 10, 30, surface)
+        for i in range(self.player.ammo):
+            x = 10 + i*11
+            surface.blit(self.game.assets['bullet'], (x, 35))
+
+        # draw_text(f'GRENADES', self.game.font, GRAY, 10, 60, surface)
+        for i in range(self.player.grenade):
+            x = 10 + i*15
+            surface.blit(self.game.assets['grenade'], (x, 62))
+
         self.player_group.draw(surface)
         self.player.bullet_group.draw(surface)
         self.player.grenade_group.draw(surface)

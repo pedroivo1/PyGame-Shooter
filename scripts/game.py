@@ -15,6 +15,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.state_stack = []
+        self.font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
+
 
         self.dt = time.time()
         self.prev_time = time.time()
@@ -33,9 +35,9 @@ class Game:
             'grenade_box': load_image('icons/grenade_box.png'),
             'health_box': load_image('icons/health_box.png'),
 
-            'bullet': load_image('icons/bullet.png', 1.5),
-            'grenade': load_image('icons/grenade.png', 1.5),
-            'explosion': load_images('explosion', 1.5),
+            'bullet': load_image('icons/bullet.png', 1.35),
+            'grenade': load_image('icons/grenade.png', 1.35),
+            'explosion': load_images('explosion', 1.35),
 
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),

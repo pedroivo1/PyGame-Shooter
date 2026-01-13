@@ -180,6 +180,7 @@ class Enemy(Soldier):
                 self.facing_right = not self.facing_right
 
 
+
 class ItemBox(pygame.sprite.Sprite):
     def __init__(self, game, type, x, y, group):
         super().__init__(group)
