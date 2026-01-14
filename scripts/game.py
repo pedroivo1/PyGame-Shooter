@@ -20,7 +20,7 @@ class Game:
         self.dt = time.time()
         self.prev_time = time.time()
         self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}
-        self.scale = 2.5
+        self.scale = 1.65
 
         self.load_assets()
         self.play_music()
@@ -30,13 +30,13 @@ class Game:
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
 
-            'ammo_box': load_image('icons/ammo_box.png'),
-            'grenade_box': load_image('icons/grenade_box.png'),
-            'health_box': load_image('icons/health_box.png'),
+            'ammo_box': load_image('icons/ammo_box.png', self.scale*0.5),
+            'grenade_box': load_image('icons/grenade_box.png', self.scale*0.5),
+            'health_box': load_image('icons/health_box.png', self.scale*0.5),
 
-            'bullet': load_image('icons/bullet.png', 1.35),
-            'grenade': load_image('icons/grenade.png', 1.35),
-            'explosion': load_images('explosion', 1.35),
+            'bullet': load_image('icons/bullet.png', self.scale*0.7),
+            'grenade': load_image('icons/grenade.png', self.scale*0.7),
+            'explosion': load_images('explosion', self.scale*0.7),
 
             'green_death': load_images('soldiers/green/death', self.scale),
             'green_idle': load_images('soldiers/green/idle', self.scale),

@@ -1,54 +1,8 @@
 import pygame
+import random
 from abc import ABC
 from .settings import *
 from .utils import AnimationManager
-
-class HealthBar:
-    def __init__(self, width, height, max_health, border):
-        self.width = width
-        self.height = height
-        self.max_health = max_health
-        self.border = border
-
-    def draw(self, surface, current_health, x, y):
-        health_to_draw = max(0, current_health)
-        
-        green_width = 0
-        yellow_width = 0
-        black_width = 0
-
-        if health_to_draw <= self.max_health:
-            ratio = health_to_draw / self.max_health
-            green_width = int(self.width * ratio)
-        elif health_to_draw <= self.max_health * 2:
-            green_width = self.width
-            extra_health = health_to_draw - self.max_health
-            ratio_extra = extra_health / self.max_health 
-            yellow_width = int(self.width * ratio_extra)
-        else:
-            green_width = self.width
-            yellow_width = self.width
-            black_health = health_to_draw - (self.max_health * 2)
-            ratio_black = black_health / self.max_health
-            black_width = int(self.width * ratio_black)
-            black_width = min(black_width, self.width)
-
-        border_rect = pygame.Rect(x, y, self.width, self.height)
-        pygame.draw.rect(surface, RED, border_rect)
-        
-        if green_width > 0:
-            fill_rect = pygame.Rect(x, y, green_width, self.height)
-            pygame.draw.rect(surface, GREEN, fill_rect)
-
-        if yellow_width > 0:
-            yellow_rect = pygame.Rect(x, y, yellow_width, self.height)
-            pygame.draw.rect(surface, YELLOW, yellow_rect)
-
-        if black_width > 0:
-            black_rect = pygame.Rect(x, y, black_width, self.height)
-            pygame.draw.rect(surface, GRAY, black_rect)
-        
-        pygame.draw.rect(surface, BLACK, border_rect, self.border)
 
 
 class Soldier(pygame.sprite.Sprite, ABC):
@@ -172,6 +126,7 @@ class Player(Soldier):
         self.grenade_cooldown = 0.0
 
         self.health_bar = HealthBar(200, 20, self.max_health, 3)
+        self.max_health = 300
 
     def update(self, dt, actions):
         if self.alive_:
@@ -211,6 +166,7 @@ class Enemy(Soldier):
         self.move_counter = 0 
         self.idling = False
         self.idling_counter = 0
+        self.t = 1
         
     def update(self, dt):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
@@ -226,17 +182,67 @@ class Enemy(Soldier):
                 ai_actions['right'] = True
             else:
                 ai_actions['left'] = True
-            
+
             self.move_counter += dt
-            if self.move_counter > 1:
+            if self.move_counter > self.t:
+                self.t = random.uniform(0.5, 3)
                 self.idling = True
                 self.idling_counter = 0
                 self.move_counter = 0
         else:
             self.idling_counter += dt
-            if self.idling_counter > 2:
+            if self.idling_counter > self.t:
+                self.t = random.uniform(0.5, 3)
                 self.idling = False
                 self.facing_right = not self.facing_right
+
+
+class HealthBar:
+    def __init__(self, width, height, max_health, border):
+        self.width = width
+        self.height = height
+        self.max_health = max_health
+        self.border = border
+
+    def draw(self, surface, current_health, x, y):
+        health_to_draw = max(0, current_health)
+        
+        green_width = 0
+        yellow_width = 0
+        black_width = 0
+
+        if health_to_draw <= self.max_health:
+            ratio = health_to_draw / self.max_health
+            green_width = int(self.width * ratio)
+        elif health_to_draw <= self.max_health * 2:
+            green_width = self.width
+            extra_health = health_to_draw - self.max_health
+            ratio_extra = extra_health / self.max_health 
+            yellow_width = int(self.width * ratio_extra)
+        else:
+            green_width = self.width
+            yellow_width = self.width
+            black_health = health_to_draw - (self.max_health * 2)
+            ratio_black = black_health / self.max_health
+            black_width = int(self.width * ratio_black)
+            black_width = min(black_width, self.width)
+
+        border_rect = pygame.Rect(x, y, self.width, self.height)
+        pygame.draw.rect(surface, RED, border_rect)
+        
+        if green_width > 0:
+            fill_rect = pygame.Rect(x, y, green_width, self.height)
+            pygame.draw.rect(surface, GREEN, fill_rect)
+
+        if yellow_width > 0:
+            yellow_rect = pygame.Rect(x, y, yellow_width, self.height)
+            pygame.draw.rect(surface, YELLOW, yellow_rect)
+
+        if black_width > 0:
+            black_rect = pygame.Rect(x, y, black_width, self.height)
+            pygame.draw.rect(surface, GRAY, black_rect)
+        
+        pygame.draw.rect(surface, BLACK, border_rect, self.border)
 
 
 class ItemBox(pygame.sprite.Sprite):
@@ -251,7 +257,7 @@ class ItemBox(pygame.sprite.Sprite):
         if pygame.sprite.collide_rect(self, player):
             if self.item_type == 'health_box':
                 player.health += 25
-                if player.health > 300:
+                if player.health > player.max_health:
                     player.health = 300
                 
             elif self.item_type == 'ammo_box':

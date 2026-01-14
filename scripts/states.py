@@ -44,11 +44,11 @@ class Level(State):
         grenade = ItemBox(game, 'grenade_box', 980, 260, self.item_box_group)
 
         self.player_group = pygame.sprite.GroupSingle()
-        self.player = Player(game, 200, 200, 300, 'blue', 20, 5)
+        self.player = Player(game, 200, 200, TILE_SIZE*5.8, 'blue', 20, 5)
         self.player_group.add(self.player)
 
         self.enemy_group = pygame.sprite.Group()
-        enemy1 = Enemy(game, 500, 350, 300, 'red')
+        enemy1 = Enemy(game, 500, 350, TILE_SIZE*4.5, 'red')
         self.enemy_group.add(enemy1)
 
     def update(self, dt, actions):
