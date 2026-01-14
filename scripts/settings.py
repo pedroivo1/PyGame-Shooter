@@ -10,9 +10,13 @@ TILE_SIZE = 40
 
 # Colors
 BG_COLOR = (30, 30, 30)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
-GRAY = (230, 230, 230)
-RED = (230, 20, 10)
+YELLOW = (255, 255, 0)
+GRAY = (220, 220, 220)
 
 # Physics
 GRAVITY = 2600

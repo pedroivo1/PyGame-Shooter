@@ -3,6 +3,53 @@ from abc import ABC
 from .settings import *
 from .utils import AnimationManager
 
+class HealthBar:
+    def __init__(self, width, height, max_health, border):
+        self.width = width
+        self.height = height
+        self.max_health = max_health
+        self.border = border
+
+    def draw(self, surface, current_health, x, y):
+        health_to_draw = max(0, current_health)
+        
+        green_width = 0
+        yellow_width = 0
+        black_width = 0
+
+        if health_to_draw <= self.max_health:
+            ratio = health_to_draw / self.max_health
+            green_width = int(self.width * ratio)
+        elif health_to_draw <= self.max_health * 2:
+            green_width = self.width
+            extra_health = health_to_draw - self.max_health
+            ratio_extra = extra_health / self.max_health 
+            yellow_width = int(self.width * ratio_extra)
+        else:
+            green_width = self.width
+            yellow_width = self.width
+            black_health = health_to_draw - (self.max_health * 2)
+            ratio_black = black_health / self.max_health
+            black_width = int(self.width * ratio_black)
+            black_width = min(black_width, self.width)
+
+        border_rect = pygame.Rect(x, y, self.width, self.height)
+        pygame.draw.rect(surface, RED, border_rect)
+        
+        if green_width > 0:
+            fill_rect = pygame.Rect(x, y, green_width, self.height)
+            pygame.draw.rect(surface, GREEN, fill_rect)
+
+        if yellow_width > 0:
+            yellow_rect = pygame.Rect(x, y, yellow_width, self.height)
+            pygame.draw.rect(surface, YELLOW, yellow_rect)
+
+        if black_width > 0:
+            black_rect = pygame.Rect(x, y, black_width, self.height)
+            pygame.draw.rect(surface, GRAY, black_rect)
+        
+        pygame.draw.rect(surface, BLACK, border_rect, self.border)
+
 
 class Soldier(pygame.sprite.Sprite, ABC):
     def __init__(self, game, x, y, speed, color, ammo):
@@ -11,8 +58,11 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.speed = speed
         self.ammo = ammo
         self.health = 100
+        self.max_health = 100
         self.alive_ = True
         
+        self.health_bar = HealthBar(40, 8, self.max_health, 2)
+
         self.shoot_cooldown = 0.0
         self.shoot_delay = 0.35
         self.death_timer = 0.0
@@ -106,15 +156,22 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.health = 0
             self.alive_ = False
 
+    def draw_ui(self, surface):
+        if self.alive_:
+            bar_x = self.rect.x + (self.rect.width // 2) - (self.health_bar.width // 2)
+            bar_y = self.rect.y - 15 
+            self.health_bar.draw(surface, self.health, bar_x, bar_y)
+
 
 class Player(Soldier):
     def __init__(self, game, x, y, speed, color, ammo, grenade):
         super().__init__(game, x, y, speed, color, ammo)
         self.grenade_group = pygame.sprite.Group()
         self.explosion_group = pygame.sprite.Group()
-        
         self.grenade = grenade
         self.grenade_cooldown = 0.0
+
+        self.health_bar = HealthBar(200, 20, self.max_health, 3)
 
     def update(self, dt, actions):
         if self.alive_:
@@ -122,6 +179,9 @@ class Player(Soldier):
             self.shoot(dt, actions)
             self.throw_grenade(dt, actions)
         self.animate(dt, actions)
+
+    def draw_ui(self, surface):
+        self.health_bar.draw(surface, self.health, 10, 10)
 
     def throw_grenade(self, dt, actions):
         if self.grenade_cooldown > 0:
@@ -145,14 +205,13 @@ class Player(Soldier):
                     self.direction, 
                     self)
 
-
 class Enemy(Soldier):
     def __init__(self, game, x, y, speed, color):
         super().__init__(game, x, y, speed, color, -1)
         self.move_counter = 0 
         self.idling = False
         self.idling_counter = 0
-
+        
     def update(self, dt):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         if self.alive_:
@@ -180,25 +239,27 @@ class Enemy(Soldier):
                 self.facing_right = not self.facing_right
 
 
-
 class ItemBox(pygame.sprite.Sprite):
-    def __init__(self, game, type, x, y, group):
+    def __init__(self, game, item_type, x, y, group):
         super().__init__(group)
-        self.type = type
-        self.image = game.assets[self.type]
+        self.item_type = item_type
+        self.image = game.assets[self.item_type]
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.height)
 
     def update(self, player):
         if pygame.sprite.collide_rect(self, player):
-            if self.type == 'health_box':
+            if self.item_type == 'health_box':
                 player.health += 25
-            elif self.type == 'ammo_box':
+                if player.health > 300:
+                    player.health = 300
+                
+            elif self.item_type == 'ammo_box':
                 player.ammo += 5
-            elif self.type == 'grenade_box':
+            elif self.item_type == 'grenade_box':
                 player.grenade += 2
             self.kill()
-    
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction, group):
         super().__init__(group)

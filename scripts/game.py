@@ -17,7 +17,6 @@ class Game:
         self.state_stack = []
         self.font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
 
-
         self.dt = time.time()
         self.prev_time = time.time()
         self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}

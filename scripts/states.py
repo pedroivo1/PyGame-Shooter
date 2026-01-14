@@ -36,6 +36,10 @@ class Level(State):
         self.game = game
         self.item_box_group = pygame.sprite.Group()
         health = ItemBox(game, 'health_box', 900, 260, self.item_box_group)
+        health = ItemBox(game, 'health_box', 1100, 260, self.item_box_group)
+        health = ItemBox(game, 'health_box', 1200, 260, self.item_box_group)
+        health = ItemBox(game, 'health_box', 1300, 260, self.item_box_group)
+        health = ItemBox(game, 'health_box', 1400, 260, self.item_box_group)
         ammo = ItemBox(game, 'ammo_box', 940, 260, self.item_box_group)
         grenade = ItemBox(game, 'grenade_box', 980, 260, self.item_box_group)
 
@@ -80,12 +84,10 @@ class Level(State):
         surface.fill((144, 201, 120))
         pygame.draw.line(surface, RED, (0, FLOOR_Y), (SCREEN_WIDTH, FLOOR_Y))
 
-        # draw_text(f'AMMO', self.game.font, GRAY, 10, 30, surface)
         for i in range(self.player.ammo):
             x = 10 + i*11
             surface.blit(self.game.assets['bullet'], (x, 35))
 
-        # draw_text(f'GRENADES', self.game.font, GRAY, 10, 60, surface)
         for i in range(self.player.grenade):
             x = 10 + i*15
             surface.blit(self.game.assets['grenade'], (x, 62))
@@ -96,3 +98,8 @@ class Level(State):
         self.player.explosion_group.draw(surface)
         self.enemy_group.draw(surface)
         self.item_box_group.draw(surface)
+
+        self.player.draw_ui(surface) 
+
+        for enemy in self.enemy_group:
+            enemy.draw_ui(surface)
