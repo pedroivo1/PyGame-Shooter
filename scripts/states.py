@@ -4,7 +4,8 @@
 import pygame
 from abc import ABC, abstractmethod
 from .settings import *
-from .entities import Player, Enemy, ItemBox
+from .entities.soldier import Player, Enemy
+from .entities.Items import ItemBox
 from .utils import draw_text
 
 

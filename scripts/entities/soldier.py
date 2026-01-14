@@ -1,8 +1,9 @@
 import pygame
 import random
 from abc import ABC
-from .settings import *
-from .utils import AnimationManager
+from ..settings import *
+from ..utils import AnimationManager
+from .armmor import Bullet, Grenade
 
 
 class Soldier(pygame.sprite.Sprite, ABC):
@@ -167,7 +168,7 @@ class Enemy(Soldier):
         self.idling = False
         self.idling_counter = 0
         self.t = 1
-        
+
     def update(self, dt):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         if self.alive_:
@@ -192,7 +193,7 @@ class Enemy(Soldier):
         else:
             self.idling_counter += dt
             if self.idling_counter > self.t:
-                self.t = random.uniform(0.5, 3)
+                self.t = random.uniform(0.5, 1.5)
                 self.idling = False
                 self.facing_right = not self.facing_right
 
@@ -243,101 +244,3 @@ class HealthBar:
             pygame.draw.rect(surface, GRAY, black_rect)
         
         pygame.draw.rect(surface, BLACK, border_rect, self.border)
-
-
-class ItemBox(pygame.sprite.Sprite):
-    def __init__(self, game, item_type, x, y, group):
-        super().__init__(group)
-        self.item_type = item_type
-        self.image = game.assets[self.item_type]
-        self.rect = self.image.get_rect()
-        self.rect.midtop = (x + TILE_SIZE // 2, y + TILE_SIZE - self.rect.height)
-
-    def update(self, player):
-        if pygame.sprite.collide_rect(self, player):
-            if self.item_type == 'health_box':
-                player.health += 25
-                if player.health > player.max_health:
-                    player.health = 300
-                
-            elif self.item_type == 'ammo_box':
-                player.ammo += 5
-            elif self.item_type == 'grenade_box':
-                player.grenade += 2
-            self.kill()
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, direction, group):
-        super().__init__(group)
-        self.game = game
-        self.speed = 650
-        self.image = game.assets['bullet']
-        self.rect = self.image.get_rect(center=(x, y))
-        self.direction = direction
-
-    def update(self, dt):
-        self.rect.x += (self.direction * self.speed) * dt
-        if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
-            self.kill()
-
-
-class Grenade(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, direction, player):
-        super().__init__(player.grenade_group)
-        self.game = game
-        self.player = player
-        
-        self.timer = GRENADE_TIMER
-        self.velocity_y = -550
-        self.speed = GRENADE_SPEED
-        self.direction = direction
-        
-        self.image = game.assets['grenade']
-        self.rect = self.image.get_rect(center=(x, y))
-
-    def update(self, dt):
-        self.timer -= dt
-        if self.timer < 0:
-            Explosion(self.game, self.rect.centerx, self.rect.centery, self.player.explosion_group)
-            self.kill()
-            return
-
-        self.rect.x += (self.direction * self.speed) * dt
-        if self.rect.left < 0:
-            self.rect.left = 0
-            self.direction *= -1
-            self.speed *= GRENADE_BOUNCE
-        elif self.rect.right > SCREEN_WIDTH:
-            self.rect.right = SCREEN_WIDTH
-            self.direction *= -1 
-            self.speed *= GRENADE_BOUNCE
-
-        self.velocity_y += GRAVITY * dt
-        dy = self.velocity_y * dt
-        
-        if self.rect.bottom + dy > FLOOR_Y:
-            self.rect.bottom = FLOOR_Y
-            self.velocity_y = -(self.velocity_y * GRENADE_BOUNCE)
-            self.speed *= 0.8
-        else:
-            self.rect.y += dy 
-
-class Explosion(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, group):
-        super().__init__(group)
-        self.game = game
-        self.hit_list = []
-        self.damage = 80
-
-        self.animations = {'explosion': game.assets['explosion']}
-        self.anim_manager = AnimationManager(self.animations, frame_duration=0.07, action='explosion')
-        
-        self.image = self.anim_manager.get_image()
-        self.rect = self.image.get_rect(center=(x, y))
-        self.game.sfx['grenade'].play()
-
-    def update(self, dt):
-        finished = self.anim_manager.update(dt, loop=False)
-        self.image = self.anim_manager.get_image()
-        if finished:
-            self.kill()
