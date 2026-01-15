@@ -122,7 +122,7 @@ class Button():
         return action
 
 # --- SISTEMA DE SAVE/LOAD COM PATHLIB ---
-SAVE_FILE = ROOT_DIR / 'save.json'
+SAVE_FILE = ROOT_DIR / 'data/save.json'
 
 def load_progress():
     # Verifica se existe usando .exists() do Pathlib

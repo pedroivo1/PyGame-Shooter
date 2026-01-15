@@ -29,27 +29,21 @@ class MainMenu(State):
         super().__init__(game)
         self.max_level = load_progress()
         
-        # --- CONFIGURAÇÃO DA GRADE ---
-        btn_size = 60       # Tamanho do botão
-        gap = 20            # Espaço entre botões
-        max_width = 640     # Largura máxima da área de botões
+        btn_size = 60       
+        gap = 20            
+        max_width = 640     
         
-        # Calcula quantas colunas cabem nessa largura
-        # (size + gap) é o espaço que um botão ocupa
         cols = max_width // (btn_size + gap)
-        if cols == 0: cols = 1 # Segurança para não dividir por zero
+        if cols == 0: cols = 1 
 
-        # Calcula a largura e altura TOTAL que o bloco de botões vai ocupar
-        # Isso serve para centralizar tudo na tela depois
-        total_rows = (MAX_LEVELS + cols - 1) // cols # Teto da divisão
+        total_rows = (MAX_LEVELS + cols - 1) // cols 
         
         block_width = cols * btn_size + (cols - 1) * gap
-        if MAX_LEVELS < cols: # Se tiver menos níveis que o máximo, ajusta a largura
+        if MAX_LEVELS < cols: 
              block_width = MAX_LEVELS * btn_size + (MAX_LEVELS - 1) * gap
              
         block_height = total_rows * btn_size + (total_rows - 1) * gap
 
-        # Ponto inicial (X, Y) para o primeiro botão (Topo-Esquerda do bloco)
         start_x = (SCREEN_WIDTH - block_width) // 2 + (btn_size // 2)
         start_y = (SCREEN_HEIGHT - block_height) // 2 + (btn_size // 2)
 
@@ -58,8 +52,6 @@ class MainMenu(State):
         for i in range(1, MAX_LEVELS + 1):
             img = self.create_level_img(i, btn_size)
             
-            # Matemática da Grade:
-            # Índice começa em 0 para facilitar conta
             idx = i - 1
             row = idx // cols
             col = idx % cols
@@ -98,10 +90,9 @@ class MainMenu(State):
                     new_level.enter_state()
 
     def draw(self, surface):
-        surface.fill((30, 30, 30)) 
+        surface.fill(D_GRAY) 
         
-        title = self.game.font.render(f"SELECIONE O NIVEL ({self.max_level}/{MAX_LEVELS})", True, (255, 255, 255))
-        # Desenha o título um pouco acima do bloco de botões
+        title = self.game.font.render(f"SELECIONE O NIVEL", True, WHITE)
         title_y = self.level_btns[0]['btn'].rect.top - 60
         surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, title_y))
 
@@ -109,7 +100,7 @@ class MainMenu(State):
             if item['locked']:
                 item['btn'].draw(surface) 
                 overlay = pygame.Surface((item['btn'].rect.width, item['btn'].rect.height))
-                overlay.set_alpha(180) 
+                overlay.set_alpha(180)
                 overlay.fill((50, 50, 50)) 
                 surface.blit(overlay, item['btn'].rect.topleft)
             else:
@@ -127,6 +118,11 @@ class Level(State):
         
         self.restart_btn = Button(center_x, center_y - button_gap, self.game.assets['restart_btn'], 3)
         self.exit_btn = Button(center_x, center_y + button_gap, self.game.assets['exit_btn'], 1)
+
+        # --- MUDANÇA 1: BOTÃO VOLTAR NO TOPO ---
+        # Coloca o botão onde antes ficava a vida (10, 5 é uma margem segura)
+        # Ajuste a escala (0.8) conforme o tamanho da sua imagem
+        self.back_btn = Button(20, 25, self.game.assets['back_btn'], 0.6) 
 
         self.player_bullet_group = pygame.sprite.Group()
         self.enemy_bullet_group = pygame.sprite.Group()
@@ -162,6 +158,11 @@ class Level(State):
         self.player = self.world.process_data(level_data, groups_dict)
 
     def update(self, dt, actions):
+        # Checa botão voltar
+        if self.back_btn.draw(self.game.screen):
+            self.exit_state()
+            return
+
         if not self.player: return
 
         if not self.player.alive_:
@@ -174,18 +175,15 @@ class Level(State):
                 self.exit_state() 
             return
 
-        # --- CORREÇÃO DO LAG DA CÂMERA ---
+        # Lógica da Câmera
         if self.level_width < SCREEN_WIDTH:
             self.scroll = 0
         else:
             if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
                 self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
             
-            if self.scroll < 0: 
-                self.scroll = 0
-            elif self.scroll > self.level_width - SCREEN_WIDTH: 
-                self.scroll = self.level_width - SCREEN_WIDTH
-        # ---------------------------------
+            if self.scroll < 0: self.scroll = 0
+            elif self.scroll > self.level_width - SCREEN_WIDTH: self.scroll = self.level_width - SCREEN_WIDTH
 
         self.player_group.update(dt, actions, self.world.obstacle_group, self.world.water_group)
         self.player_bullet_group.update(dt)
@@ -202,7 +200,6 @@ class Level(State):
     def _check_level_complete(self):
         if pygame.sprite.spritecollide(self.player, self.world.exit_group, False):
             save_progress(self.level_index)
-
             self.level_index += 1
             if self.level_index <= MAX_LEVELS:
                 self.game.state_stack.pop() 
@@ -255,15 +252,26 @@ class Level(State):
         self.draw_scrolled(surface, self.enemy_bullet_group)
 
         if self.player:
+            # --- MUDANÇA 2: DESCER A HUD ---
+            # O draw_ui já foi ajustado no soldier.py para desenhar a vida em Y=50
             self.player.draw_ui(surface, self.scroll) 
             
+            # Ajustamos balas e granadas para ficarem ABAIXO da barra de vida
+            # Vida está em Y=50 e tem altura aprox 20px -> Fim em Y=70
+            
+            # Munição (agora em Y=75)
             for i in range(self.player.ammo):
                 x = 10 + i*11
-                surface.blit(self.game.assets['bullet'], (x, 35))
+                surface.blit(self.game.assets['bullet'], (x, 75))
+            
+            # Granadas (agora em Y=100)
             for i in range(self.player.grenade):
                 x = 10 + i*15
-                surface.blit(self.game.assets['grenade'], (x, 62))
+                surface.blit(self.game.assets['grenade'], (x, 100))
         
+        # O botão voltar é desenhado por último (interface)
+        self.back_btn.draw(surface)
+
         if not self.player.alive_:
             self.restart_btn.draw(surface)
             self.exit_btn.draw(surface)

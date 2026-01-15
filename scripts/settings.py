@@ -17,6 +17,7 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 GRAY = (220, 220, 220)
+D_GRAY = (60, 60, 60)
 
 # Physics
 GRAVITY = 2600

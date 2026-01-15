@@ -166,7 +166,7 @@ class Player(Soldier):
         self.animate(dt, actions)
 
     def draw_ui(self, surface, scroll=0):
-        self.health_bar.draw(surface, self.health, 10, 10)
+        self.health_bar.draw(surface, self.health, 10, 50)
 
     def throw_grenade(self, dt, actions):
         if self.grenade_cooldown > 0:

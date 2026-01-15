@@ -30,13 +30,12 @@ class Game:
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
             'restart_btn': load_image('restart_btn.png'),
+            'back_btn': load_image('back_btn.png'), # <--- NOVO ASSET
 
-            # --- BOTÕES DE SELEÇÃO DE NÍVEL ---
-            # Certifique-se de ter essas imagens na pasta data/images!
+            # Botões de Nível
             'lvl1_btn': load_image('lvl1_btn.png'),
             'lvl2_btn': load_image('lvl2_btn.png'),
             'lvl3_btn': load_image('lvl3_btn.png'),
-            # ----------------------------------
 
             'tiles': load_images('tiles', self.scale),
 
