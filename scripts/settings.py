@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Author: https://github.com/pedroivo1
 
 # Screen
 SCREEN_WIDTH = 1500
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 640
 FPS = 60
 TITLE = "My Pygame Framework"
 TILE_SIZE = 40
@@ -21,7 +20,7 @@ GRAY = (220, 220, 220)
 
 # Physics
 GRAVITY = 2600
-JUMP_FORCE = -650
+JUMP_FORCE = -700
 FLOOR_Y = 300
 
 # Gameplay
@@ -34,3 +33,4 @@ FONT_NAME = 'Futura'
 FONT_SIZE = 32
 
 DEBUG = False
+MAX_LEVELS = 3

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Author: https://github.com/pedroivo1
 
 import pygame
@@ -30,6 +29,9 @@ class Game:
         self.assets = {
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
+            'restart_btn': load_image('restart_btn.png'),
+
+            'tiles': load_images('tiles', self.scale),
 
             'ammo_box': load_image('icons/ammo_box.png', self.scale*0.5),
             'grenade_box': load_image('icons/grenade_box.png', self.scale*0.5),
