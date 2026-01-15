@@ -24,7 +24,6 @@ class State(ABC):
     def exit_state(self):
         self.game.state_stack.pop()
 
-# --- MENU PRINCIPAL ATUALIZADO ---
 class MainMenu(State):
     def __init__(self, game):
         super().__init__(game)
@@ -32,58 +31,40 @@ class MainMenu(State):
         
         center_x = SCREEN_WIDTH // 2
         center_y = SCREEN_HEIGHT // 2
-        gap = 100
+        gap = 80 
 
         self.level_btns = []
         
-        # Cria botões para níveis 1, 2 e 3
-        for i in range(1, 4): # 1, 2, 3
-            # Gera a imagem do botão via código (Quadrado Branco com Número)
+        total_height = (MAX_LEVELS * gap)
+        start_y = center_y - (total_height // 2) + (gap // 2)
+
+        for i in range(1, MAX_LEVELS + 1): 
             img = self.create_level_img(i)
+            y_pos = start_y + (i - 1) * gap 
             
-            # Posiciona verticalmente baseado no gap
-            y_pos = center_y + (i - 2) * gap 
-            
-            btn = Button(center_x, y_pos, img, 1) # Escala 1
+            btn = Button(center_x, y_pos, img, 1)
             
             self.level_btns.append({
                 'btn': btn,
                 'level': i,
-                'locked': self.max_level < i # Define se está bloqueado
+                'locked': self.max_level < i
             })
 
     def create_level_img(self, number):
-        # Cria uma superfície (Quadrado) de 60x60 pixels
         size = 60
         surf = pygame.Surface((size, size))
-        
-        # Pinta de Branco
         surf.fill((255, 255, 255))
-        
-        # Desenha uma borda preta
         pygame.draw.rect(surf, (0, 0, 0), (0, 0, size, size), 4)
-        
-        # Renderiza o número no centro
-        # Usa a fonte do jogo (self.game.font)
-        text_surf = self.game.font.render(str(number), True, (0, 0, 0)) # Texto Preto
-        
-        # Centraliza o texto na superfície
+        text_surf = self.game.font.render(str(number), True, (0, 0, 0))
         text_rect = text_surf.get_rect(center=(size//2, size//2))
         surf.blit(text_surf, text_rect)
-        
         return surf
 
     def update(self, dt, actions):
-        # --- CORREÇÃO DO BUG DO SAVE ---
-        # Recarrega o progresso toda vez que o menu atualiza
-        # Isso garante que ao voltar do Nível 1, o menu saiba que o 2 abriu
         self.max_level = load_progress()
-        
-        # Atualiza o status de bloqueio dos botões em tempo real
         for item in self.level_btns:
             item['locked'] = self.max_level < item['level']
 
-        # Checa cliques
         for item in self.level_btns:
             if not item['locked']:
                 if item['btn'].draw(self.game.screen):
@@ -93,19 +74,15 @@ class MainMenu(State):
     def draw(self, surface):
         surface.fill((30, 30, 30)) 
         
-        # Título simples (Opcional)
-        title = self.game.font.render("SELECIONE O NIVEL", True, (255, 255, 255))
-        surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 50))
+        title = self.game.font.render(f"SELECIONE ({self.max_level}/{MAX_LEVELS})", True, (255, 255, 255))
+        surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 20))
 
         for item in self.level_btns:
             if item['locked']:
-                # Se bloqueado, desenha o botão escurecido e com cadeado (simulado por cor)
-                item['btn'].draw(surface) # Desenha normal primeiro
-                
-                # Desenha um quadrado cinza semitransparente por cima
+                item['btn'].draw(surface) 
                 overlay = pygame.Surface((item['btn'].rect.width, item['btn'].rect.height))
-                overlay.set_alpha(180) # Transparência
-                overlay.fill((50, 50, 50)) # Cinza escuro
+                overlay.set_alpha(180) 
+                overlay.fill((50, 50, 50)) 
                 surface.blit(overlay, item['btn'].rect.topleft)
             else:
                 item['btn'].draw(surface)
@@ -169,11 +146,21 @@ class Level(State):
                 self.exit_state() 
             return
 
-        if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
-            self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
-        
-        if self.scroll < 0: self.scroll = 0
-        elif self.scroll > self.level_width - SCREEN_WIDTH: self.scroll = self.level_width - SCREEN_WIDTH
+        # --- CORREÇÃO DO LAG DA CÂMERA ---
+        # Se a largura do nível for MENOR que a tela, TRAVA o scroll em 0.
+        if self.level_width < SCREEN_WIDTH:
+            self.scroll = 0
+        else:
+            # Caso contrário, aplica a matemática normal da câmera
+            if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
+                self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
+            
+            # Limita (Clamping)
+            if self.scroll < 0: 
+                self.scroll = 0
+            elif self.scroll > self.level_width - SCREEN_WIDTH: 
+                self.scroll = self.level_width - SCREEN_WIDTH
+        # ---------------------------------
 
         self.player_group.update(dt, actions, self.world.obstacle_group, self.world.water_group)
         self.player_bullet_group.update(dt)
@@ -189,7 +176,6 @@ class Level(State):
 
     def _check_level_complete(self):
         if pygame.sprite.spritecollide(self.player, self.world.exit_group, False):
-            # SALVA O PROGRESSO
             save_progress(self.level_index)
 
             self.level_index += 1

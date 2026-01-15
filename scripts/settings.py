@@ -33,4 +33,4 @@ FONT_NAME = 'Futura'
 FONT_SIZE = 32
 
 DEBUG = False
-MAX_LEVELS = 3
+MAX_LEVELS = 10
