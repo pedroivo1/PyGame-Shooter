@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Author: https://github.com/pedroivo1
 
 # Screen
 SCREEN_WIDTH = 1500

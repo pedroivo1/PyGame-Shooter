@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Author: https://github.com/pedroivo1
+
 import pygame
 import random
 from abc import ABC

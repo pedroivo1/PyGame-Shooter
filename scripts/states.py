@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Author: https://github.com/pedroivo1
 
 import pygame
 from abc import ABC, abstractmethod
@@ -86,7 +87,7 @@ class Level(State):
                  explosion.hit_list.append(self.player)
         
         if pygame.sprite.spritecollide(self.player, self.enemy_bullet_group, True): # type: ignore
-            self.player.take_damage(10)
+            self.player.take_damage(5)
 
     def draw(self, surface):
         surface.fill((144, 201, 120))
