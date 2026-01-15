@@ -90,9 +90,9 @@ class MainMenu(State):
                     new_level.enter_state()
 
     def draw(self, surface):
-        surface.fill(D_GRAY) 
+        surface.fill((30, 30, 30)) 
         
-        title = self.game.font.render(f"SELECIONE O NIVEL", True, WHITE)
+        title = self.game.font.render(f"SELECIONE O NIVEL ({self.max_level}/{MAX_LEVELS})", True, (255, 255, 255))
         title_y = self.level_btns[0]['btn'].rect.top - 60
         surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, title_y))
 
@@ -100,7 +100,7 @@ class MainMenu(State):
             if item['locked']:
                 item['btn'].draw(surface) 
                 overlay = pygame.Surface((item['btn'].rect.width, item['btn'].rect.height))
-                overlay.set_alpha(180)
+                overlay.set_alpha(180) 
                 overlay.fill((50, 50, 50)) 
                 surface.blit(overlay, item['btn'].rect.topleft)
             else:
@@ -116,13 +116,18 @@ class Level(State):
         center_y = SCREEN_HEIGHT // 2
         button_gap = 80 
         
+        # Botões de Game Over
         self.restart_btn = Button(center_x, center_y - button_gap, self.game.assets['restart_btn'], 3)
         self.exit_btn = Button(center_x, center_y + button_gap, self.game.assets['exit_btn'], 1)
 
-        # --- MUDANÇA 1: BOTÃO VOLTAR NO TOPO ---
-        # Coloca o botão onde antes ficava a vida (10, 5 é uma margem segura)
-        # Ajuste a escala (0.8) conforme o tamanho da sua imagem
+        # Botão de Voltar (No topo)
         self.back_btn = Button(20, 25, self.game.assets['back_btn'], 0.6) 
+
+        # --- BOTÃO DE ÁUDIO (Gerado via código para não precisar de asset) ---
+        # Colocado ao lado do botão de voltar (X=70)
+        self.audio_btn_on = Button(70, 25, self.create_audio_icon("S", GREEN), 1)
+        self.audio_btn_off = Button(70, 25, self.create_audio_icon("M", RED), 1)
+        # ---------------------------------------------------------------------
 
         self.player_bullet_group = pygame.sprite.Group()
         self.enemy_bullet_group = pygame.sprite.Group()
@@ -157,11 +162,35 @@ class Level(State):
         }
         self.player = self.world.process_data(level_data, groups_dict)
 
+    # Cria um ícone quadrado simples para o som
+    def create_audio_icon(self, text, color):
+        size = 32
+        surf = pygame.Surface((size, size))
+        surf.fill(BLACK)
+        pygame.draw.rect(surf, color, (0, 0, size, size), 2) # Borda colorida
+        
+        text_surf = self.game.font.render(text, True, color)
+        # Escala o texto para caber se necessário, ou usa fonte menor
+        # Aqui assumo que a fonte padrão cabe
+        text_rect = text_surf.get_rect(center=(size//2, size//2))
+        surf.blit(text_surf, text_rect)
+        return surf
+
     def update(self, dt, actions):
-        # Checa botão voltar
+        # Botão Voltar
         if self.back_btn.draw(self.game.screen):
             self.exit_state()
             return
+
+        # --- Lógica do Botão de Som ---
+        # Desenha o botão apropriado dependendo do estado e checa clique
+        if self.game.sound_on:
+            if self.audio_btn_on.draw(self.game.screen):
+                self.game.toggle_sound()
+        else:
+            if self.audio_btn_off.draw(self.game.screen):
+                self.game.toggle_sound()
+        # -----------------------------
 
         if not self.player: return
 
@@ -175,15 +204,16 @@ class Level(State):
                 self.exit_state() 
             return
 
-        # Lógica da Câmera
         if self.level_width < SCREEN_WIDTH:
             self.scroll = 0
         else:
             if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
                 self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
             
-            if self.scroll < 0: self.scroll = 0
-            elif self.scroll > self.level_width - SCREEN_WIDTH: self.scroll = self.level_width - SCREEN_WIDTH
+            if self.scroll < 0: 
+                self.scroll = 0
+            elif self.scroll > self.level_width - SCREEN_WIDTH: 
+                self.scroll = self.level_width - SCREEN_WIDTH
 
         self.player_group.update(dt, actions, self.world.obstacle_group, self.world.water_group)
         self.player_bullet_group.update(dt)
@@ -210,13 +240,25 @@ class Level(State):
                 self.exit_state() 
 
     def _check_collisions(self):
-        hits = pygame.sprite.groupcollide(self.enemy_group, self.player_bullet_group, False, True)
+        # --- CORREÇÃO: Balas atravessam inimigos mortos ---
+        # A função collided=... verifica se houve contato E se o inimigo está vivo
+        hits = pygame.sprite.groupcollide(
+            self.enemy_group, 
+            self.player_bullet_group, 
+            False, # Não mata o inimigo aqui (temos lógica de HP)
+            True,  # Mata a bala
+            collided=lambda enemy, bullet: pygame.sprite.collide_rect(enemy, bullet) and enemy.alive_
+        )
+        
         for enemy in hits:
             enemy.take_damage(25)
+        # --------------------------------------------------
 
         exp_hits = pygame.sprite.groupcollide(self.player.explosion_group, self.enemy_group, False, False)
         for explosion, enemies_hit in exp_hits.items():
             for enemy in enemies_hit:
+                # Explosão acerta inimigos mortos? Geralmente sim (física), mas se quiser tirar:
+                # if enemy.alive_: ...
                 if enemy not in explosion.hit_list:
                     enemy.take_damage(explosion.damage)
                     explosion.hit_list.append(enemy)
@@ -227,7 +269,7 @@ class Level(State):
                  self.player.take_damage(explosion.damage)
                  explosion.hit_list.append(self.player)
         
-        if pygame.sprite.spritecollide(self.player, self.enemy_bullet_group, True): # type: ignore
+        if pygame.sprite.spritecollide(self.player, self.enemy_bullet_group, True): 
             self.player.take_damage(10)
 
     def draw_scrolled(self, surface, group):
@@ -252,25 +294,23 @@ class Level(State):
         self.draw_scrolled(surface, self.enemy_bullet_group)
 
         if self.player:
-            # --- MUDANÇA 2: DESCER A HUD ---
-            # O draw_ui já foi ajustado no soldier.py para desenhar a vida em Y=50
             self.player.draw_ui(surface, self.scroll) 
             
-            # Ajustamos balas e granadas para ficarem ABAIXO da barra de vida
-            # Vida está em Y=50 e tem altura aprox 20px -> Fim em Y=70
-            
-            # Munição (agora em Y=75)
             for i in range(self.player.ammo):
                 x = 10 + i*11
                 surface.blit(self.game.assets['bullet'], (x, 75))
-            
-            # Granadas (agora em Y=100)
             for i in range(self.player.grenade):
                 x = 10 + i*15
                 surface.blit(self.game.assets['grenade'], (x, 100))
         
-        # O botão voltar é desenhado por último (interface)
+        # Botões da HUD
         self.back_btn.draw(surface)
+        
+        # Desenha o botão de som correto
+        if self.game.sound_on:
+            self.audio_btn_on.draw(surface)
+        else:
+            self.audio_btn_off.draw(surface)
 
         if not self.player.alive_:
             self.restart_btn.draw(surface)
@@ -284,4 +324,4 @@ class Level(State):
                 for sprite in group:
                     rect_copy = sprite.rect.copy()
                     rect_copy.x -= self.scroll
-                    pygame.draw.rect(surface, (255, 255, 255), rect_copy, 1)
+                    pygame.draw.rect(surface, WHITE, rect_copy, 1)

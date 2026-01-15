@@ -21,6 +21,9 @@ class Game:
         self.prev_time = time.time()
         self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}
         self.scale = 1.65
+        
+        # Estado do Som
+        self.sound_on = True
 
         self.load_assets()
         self.play_music()
@@ -30,7 +33,7 @@ class Game:
             'start_btn': load_image('start_btn.png'),
             'exit_btn':  load_image('exit_btn.png'),
             'restart_btn': load_image('restart_btn.png'),
-            'back_btn': load_image('back_btn.png'), # <--- NOVO ASSET
+            'back_btn': load_image('back_btn.png'),
 
             # Botões de Nível
             'lvl1_btn': load_image('lvl1_btn.png'),
@@ -76,6 +79,20 @@ class Game:
             pygame.mixer.music.play(-1)
         except Exception as e:
             print("Erro ao carregar música:", e)
+
+    # --- NOVO MÉTODO PARA LIGAR/DESLIGAR SOM ---
+    def toggle_sound(self):
+        self.sound_on = not self.sound_on
+        if self.sound_on:
+            # Liga música e sons
+            pygame.mixer.music.set_volume(0.3)
+            for sound in self.sfx.values():
+                sound.set_volume(0.5) 
+        else:
+            # Zera volume (Mute)
+            pygame.mixer.music.set_volume(0)
+            for sound in self.sfx.values():
+                sound.set_volume(0)
 
     def get_dt(self):
         now = time.time()
