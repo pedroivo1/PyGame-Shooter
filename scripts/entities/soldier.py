@@ -7,7 +7,7 @@ from .armmor import Bullet, Grenade
 
 
 class Soldier(pygame.sprite.Sprite, ABC):
-    def __init__(self, game, x, y, speed, color, ammo):
+    def __init__(self, game, x, y, speed, color, ammo, bullet_group):
         super().__init__()
         self.game = game
         self.speed = speed
@@ -16,13 +16,13 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.max_health = 100
         self.alive_ = True
         
-        self.health_bar = HealthBar(40, 8, self.max_health, 2)
+        self.bullet_group = bullet_group
 
         self.shoot_cooldown = 0.0
         self.shoot_delay = 0.35
         self.death_timer = 0.0
 
-        self.bullet_group = pygame.sprite.Group()
+        self.health_bar = HealthBar(40, 8, self.max_health, 2)
 
         self.animations = {
             'idle': game.assets[f'{color}_idle'],
@@ -119,8 +119,8 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
 
 class Player(Soldier):
-    def __init__(self, game, x, y, speed, color, ammo, grenade):
-        super().__init__(game, x, y, speed, color, ammo)
+    def __init__(self, game, x, y, speed, color, ammo, grenade, bullet_group):
+        super().__init__(game, x, y, speed, color, ammo, bullet_group)
         self.grenade_group = pygame.sprite.Group()
         self.explosion_group = pygame.sprite.Group()
         self.grenade = grenade
@@ -163,9 +163,9 @@ class Player(Soldier):
 
 
 class Enemy(Soldier):
-    def __init__(self, game, x, y, speed, color):
-        super().__init__(game, x, y, speed, color, -1)
-        
+    def __init__(self, game, x, y, speed, color, bullet_grounp):
+        super().__init__(game, x, y, speed, color, 2000, bullet_grounp)
+
         self.move_timer = 0 
         self.t = random.uniform(1, 2)
         self.idling = False
@@ -178,6 +178,7 @@ class Enemy(Soldier):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
         
         look_dir = 1 if self.facing_right else -1
+        self.direction = look_dir
 
         self.front_vision = pygame.Rect(
             self.rect.centerx, 

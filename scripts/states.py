@@ -43,20 +43,25 @@ class Level(State):
         ammo = ItemBox(game, 'ammo_box', 940, 260, self.item_box_group)
         grenade = ItemBox(game, 'grenade_box', 980, 260, self.item_box_group)
 
+        self.player_bullet_group = pygame.sprite.Group()
         self.player_group = pygame.sprite.GroupSingle()
-        self.player = Player(game, 200, 200, TILE_SIZE*5.8, 'blue', 20, 5)
+        self.player = Player(game, 200, 200, TILE_SIZE*5.8, 'blue', 20, 5, self.player_bullet_group)
         self.player_group.add(self.player)
 
+        self.enemy_bullet_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
-        enemy1 = Enemy(game, 500, 350, TILE_SIZE*4.5, 'red')
+        enemy1 = Enemy(game, 500, 350, TILE_SIZE*4.5, 'red', self.enemy_bullet_group)
         self.enemy_group.add(enemy1)
 
     def update(self, dt, actions):
         self.player_group.update(dt, actions)
-        self.player.bullet_group.update(dt)
+        self.player_bullet_group.update(dt)
         self.player.grenade_group.update(dt)
         self.player.explosion_group.update(dt)
+
         self.enemy_group.update(dt, self.player)
+        self.enemy_bullet_group.update(dt)
+
         self.item_box_group.update(self.player)
 
         self._check_collisions()
@@ -79,6 +84,9 @@ class Level(State):
              if self.player not in explosion.hit_list:
                  self.player.take_damage(explosion.damage)
                  explosion.hit_list.append(self.player)
+        
+        if pygame.sprite.spritecollide(self.player, self.enemy_bullet_group, True): # type: ignore
+            self.player.take_damage(10)
 
     def draw(self, surface):
         surface.fill((144, 201, 120))
@@ -93,10 +101,12 @@ class Level(State):
             surface.blit(self.game.assets['grenade'], (x, 62))
 
         self.player_group.draw(surface)
-        self.player.bullet_group.draw(surface)
+        self.player_bullet_group.draw(surface)
         self.player.grenade_group.draw(surface)
         self.player.explosion_group.draw(surface)
+
         self.enemy_group.draw(surface)
+        self.enemy_bullet_group.draw(surface)
         self.item_box_group.draw(surface)
 
         self.player.draw_ui(surface) 
