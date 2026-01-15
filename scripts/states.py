@@ -29,20 +29,45 @@ class MainMenu(State):
         super().__init__(game)
         self.max_level = load_progress()
         
-        center_x = SCREEN_WIDTH // 2
-        center_y = SCREEN_HEIGHT // 2
-        gap = 80 
+        # --- CONFIGURAÇÃO DA GRADE ---
+        btn_size = 60       # Tamanho do botão
+        gap = 20            # Espaço entre botões
+        max_width = 640     # Largura máxima da área de botões
+        
+        # Calcula quantas colunas cabem nessa largura
+        # (size + gap) é o espaço que um botão ocupa
+        cols = max_width // (btn_size + gap)
+        if cols == 0: cols = 1 # Segurança para não dividir por zero
+
+        # Calcula a largura e altura TOTAL que o bloco de botões vai ocupar
+        # Isso serve para centralizar tudo na tela depois
+        total_rows = (MAX_LEVELS + cols - 1) // cols # Teto da divisão
+        
+        block_width = cols * btn_size + (cols - 1) * gap
+        if MAX_LEVELS < cols: # Se tiver menos níveis que o máximo, ajusta a largura
+             block_width = MAX_LEVELS * btn_size + (MAX_LEVELS - 1) * gap
+             
+        block_height = total_rows * btn_size + (total_rows - 1) * gap
+
+        # Ponto inicial (X, Y) para o primeiro botão (Topo-Esquerda do bloco)
+        start_x = (SCREEN_WIDTH - block_width) // 2 + (btn_size // 2)
+        start_y = (SCREEN_HEIGHT - block_height) // 2 + (btn_size // 2)
 
         self.level_btns = []
         
-        total_height = (MAX_LEVELS * gap)
-        start_y = center_y - (total_height // 2) + (gap // 2)
-
-        for i in range(1, MAX_LEVELS + 1): 
-            img = self.create_level_img(i)
-            y_pos = start_y + (i - 1) * gap 
+        for i in range(1, MAX_LEVELS + 1):
+            img = self.create_level_img(i, btn_size)
             
-            btn = Button(center_x, y_pos, img, 1)
+            # Matemática da Grade:
+            # Índice começa em 0 para facilitar conta
+            idx = i - 1
+            row = idx // cols
+            col = idx % cols
+            
+            x_pos = start_x + col * (btn_size + gap)
+            y_pos = start_y + row * (btn_size + gap)
+            
+            btn = Button(x_pos, y_pos, img, 1)
             
             self.level_btns.append({
                 'btn': btn,
@@ -50,14 +75,15 @@ class MainMenu(State):
                 'locked': self.max_level < i
             })
 
-    def create_level_img(self, number):
-        size = 60
+    def create_level_img(self, number, size):
         surf = pygame.Surface((size, size))
         surf.fill((255, 255, 255))
         pygame.draw.rect(surf, (0, 0, 0), (0, 0, size, size), 4)
+        
         text_surf = self.game.font.render(str(number), True, (0, 0, 0))
         text_rect = text_surf.get_rect(center=(size//2, size//2))
         surf.blit(text_surf, text_rect)
+        
         return surf
 
     def update(self, dt, actions):
@@ -74,8 +100,10 @@ class MainMenu(State):
     def draw(self, surface):
         surface.fill((30, 30, 30)) 
         
-        title = self.game.font.render(f"SELECIONE ({self.max_level}/{MAX_LEVELS})", True, (255, 255, 255))
-        surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 20))
+        title = self.game.font.render(f"SELECIONE O NIVEL ({self.max_level}/{MAX_LEVELS})", True, (255, 255, 255))
+        # Desenha o título um pouco acima do bloco de botões
+        title_y = self.level_btns[0]['btn'].rect.top - 60
+        surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, title_y))
 
         for item in self.level_btns:
             if item['locked']:
@@ -147,15 +175,12 @@ class Level(State):
             return
 
         # --- CORREÇÃO DO LAG DA CÂMERA ---
-        # Se a largura do nível for MENOR que a tela, TRAVA o scroll em 0.
         if self.level_width < SCREEN_WIDTH:
             self.scroll = 0
         else:
-            # Caso contrário, aplica a matemática normal da câmera
             if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
                 self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
             
-            # Limita (Clamping)
             if self.scroll < 0: 
                 self.scroll = 0
             elif self.scroll > self.level_width - SCREEN_WIDTH: 
