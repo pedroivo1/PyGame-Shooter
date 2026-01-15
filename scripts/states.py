@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from .settings import *
 from .entities.soldier import Player, Enemy
 from .entities.Items import ItemBox
-from .utils import draw_text
 
 
 class State(ABC):
@@ -57,7 +56,7 @@ class Level(State):
         self.player.bullet_group.update(dt)
         self.player.grenade_group.update(dt)
         self.player.explosion_group.update(dt)
-        self.enemy_group.update(dt)
+        self.enemy_group.update(dt, self.player)
         self.item_box_group.update(self.player)
 
         self._check_collisions()
@@ -104,3 +103,17 @@ class Level(State):
 
         for enemy in self.enemy_group:
             enemy.draw_ui(surface)
+
+        if DEBUG:
+            all_groups = [
+                self.player_group,
+                self.player.bullet_group,
+                self.player.grenade_group,
+                self.player.explosion_group,
+                self.enemy_group,
+                self.item_box_group
+            ]
+
+            for group in all_groups:
+                for sprite in group:
+                    pygame.draw.rect(surface, (255, 255, 255), sprite.rect, 1)

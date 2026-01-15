@@ -31,3 +31,5 @@ GRENADE_BOUNCE = 0.4
 # Font
 FONT_NAME = 'Futura'
 FONT_SIZE = 32
+
+DEBUG = False

@@ -1,6 +1,4 @@
 import pygame
-import random
-from abc import ABC
 from ..settings import *
 from ..utils import AnimationManager
 

@@ -161,41 +161,95 @@ class Player(Soldier):
                     self.direction, 
                     self)
 
+
 class Enemy(Soldier):
     def __init__(self, game, x, y, speed, color):
         super().__init__(game, x, y, speed, color, -1)
-        self.move_counter = 0 
+        
+        self.move_timer = 0 
+        self.t = random.uniform(1, 2)
         self.idling = False
         self.idling_counter = 0
-        self.t = 1
 
-    def update(self, dt):
+        self.front_vision = pygame.Rect(x, y, 1, 1)
+        self.back_vision = pygame.Rect(x, y, 1, 1)
+        
+    def update(self, dt, target):
         ai_actions = {'left': False, 'right': False, 'jump': False, 'shoot': False}
+        
+        look_dir = 1 if self.facing_right else -1
+
+        self.front_vision = pygame.Rect(
+            self.rect.centerx, 
+            self.rect.centery - 5, 
+            look_dir * TILE_SIZE * 6,
+            10
+        )
+
+        self.back_vision = pygame.Rect(
+            self.rect.centerx - look_dir * TILE_SIZE * 3.2, 
+            self.rect.centery - 5, 
+            look_dir * TILE_SIZE * 3.2, 
+            10
+        )
+
+        self.front_vision.normalize()
+        self.back_vision.normalize()
+
         if self.alive_:
-            self.ai(dt, ai_actions)
+            self.ai(dt, ai_actions, target)
             self.move(dt, ai_actions)
             self.shoot(dt, ai_actions)
+            
         self.animate(dt, ai_actions)
 
-    def ai(self, dt, ai_actions):
-        if not self.idling:
+    def ai(self, dt, ai_actions, target):
+        self.move_timer += dt
+
+        if self.move_timer > self.t:
+            self.move_timer = 0
+            self.t = random.uniform(1, 2)
+
+            if self.idling:
+                self.idling = False
+                self.facing_right = not self.facing_right
+            else:
+                should_idle = random.randint(1, 4) == 1
+                if should_idle:
+                    self.idling = True
+                else:
+                    self.facing_right = not self.facing_right
+
+        if self.idling:
+            ai_actions['right'] = False
+            ai_actions['left'] = False
+        else:
             if self.facing_right:
                 ai_actions['right'] = True
             else:
                 ai_actions['left'] = True
+        
+        if not target.alive_:
+            return
 
-            self.move_counter += dt
-            if self.move_counter > self.t:
-                self.t = random.uniform(0.5, 3)
-                self.idling = True
-                self.idling_counter = 0
-                self.move_counter = 0
-        else:
-            self.idling_counter += dt
-            if self.idling_counter > self.t:
-                self.t = random.uniform(0.5, 1.5)
-                self.idling = False
-                self.facing_right = not self.facing_right
+        if self.front_vision.colliderect(target.rect):
+            ai_actions['shoot'] = True
+            ai_actions['left'] = False 
+            ai_actions['right'] = False
+            self.idling = False
+        
+        elif self.back_vision.colliderect(target.rect):
+            self.facing_right = not self.facing_right
+            ai_actions['shoot'] = True
+            ai_actions['left'] = False 
+            ai_actions['right'] = False
+            self.idling = False
+
+    def draw_ui(self, surface):
+        super().draw_ui(surface)
+        if DEBUG:
+            pygame.draw.rect(surface, (255, 0, 0), self.front_vision, 2)
+            pygame.draw.rect(surface, (0, 0, 255), self.back_vision, 2)
 
 
 class HealthBar:
