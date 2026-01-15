@@ -2,13 +2,13 @@
 # Author: https://github.com/pedroivo1
 
 from scripts.game import Game
-from scripts.states import Level
-
+from scripts.states import MainMenu
 
 if __name__ == "__main__":
     g = Game()
 
-    start_level = Level(g)
-    start_level.enter_state()
+    # Começa pelo Menu Principal
+    start_menu = MainMenu(g)
+    start_menu.enter_state()
 
     g.run()

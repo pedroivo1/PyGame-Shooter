@@ -3,7 +3,7 @@ import csv
 from abc import ABC, abstractmethod
 from .settings import *
 from .world import World 
-from .utils import Button
+from .utils import Button, load_progress, save_progress
 
 class State(ABC):
     def __init__(self, game):
@@ -24,20 +24,102 @@ class State(ABC):
     def exit_state(self):
         self.game.state_stack.pop()
 
+# --- MENU PRINCIPAL ATUALIZADO ---
+class MainMenu(State):
+    def __init__(self, game):
+        super().__init__(game)
+        self.max_level = load_progress()
+        
+        center_x = SCREEN_WIDTH // 2
+        center_y = SCREEN_HEIGHT // 2
+        gap = 100
+
+        self.level_btns = []
+        
+        # Cria botões para níveis 1, 2 e 3
+        for i in range(1, 4): # 1, 2, 3
+            # Gera a imagem do botão via código (Quadrado Branco com Número)
+            img = self.create_level_img(i)
+            
+            # Posiciona verticalmente baseado no gap
+            y_pos = center_y + (i - 2) * gap 
+            
+            btn = Button(center_x, y_pos, img, 1) # Escala 1
+            
+            self.level_btns.append({
+                'btn': btn,
+                'level': i,
+                'locked': self.max_level < i # Define se está bloqueado
+            })
+
+    def create_level_img(self, number):
+        # Cria uma superfície (Quadrado) de 60x60 pixels
+        size = 60
+        surf = pygame.Surface((size, size))
+        
+        # Pinta de Branco
+        surf.fill((255, 255, 255))
+        
+        # Desenha uma borda preta
+        pygame.draw.rect(surf, (0, 0, 0), (0, 0, size, size), 4)
+        
+        # Renderiza o número no centro
+        # Usa a fonte do jogo (self.game.font)
+        text_surf = self.game.font.render(str(number), True, (0, 0, 0)) # Texto Preto
+        
+        # Centraliza o texto na superfície
+        text_rect = text_surf.get_rect(center=(size//2, size//2))
+        surf.blit(text_surf, text_rect)
+        
+        return surf
+
+    def update(self, dt, actions):
+        # --- CORREÇÃO DO BUG DO SAVE ---
+        # Recarrega o progresso toda vez que o menu atualiza
+        # Isso garante que ao voltar do Nível 1, o menu saiba que o 2 abriu
+        self.max_level = load_progress()
+        
+        # Atualiza o status de bloqueio dos botões em tempo real
+        for item in self.level_btns:
+            item['locked'] = self.max_level < item['level']
+
+        # Checa cliques
+        for item in self.level_btns:
+            if not item['locked']:
+                if item['btn'].draw(self.game.screen):
+                    new_level = Level(self.game, item['level'])
+                    new_level.enter_state()
+
+    def draw(self, surface):
+        surface.fill((30, 30, 30)) 
+        
+        # Título simples (Opcional)
+        title = self.game.font.render("SELECIONE O NIVEL", True, (255, 255, 255))
+        surface.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 50))
+
+        for item in self.level_btns:
+            if item['locked']:
+                # Se bloqueado, desenha o botão escurecido e com cadeado (simulado por cor)
+                item['btn'].draw(surface) # Desenha normal primeiro
+                
+                # Desenha um quadrado cinza semitransparente por cima
+                overlay = pygame.Surface((item['btn'].rect.width, item['btn'].rect.height))
+                overlay.set_alpha(180) # Transparência
+                overlay.fill((50, 50, 50)) # Cinza escuro
+                surface.blit(overlay, item['btn'].rect.topleft)
+            else:
+                item['btn'].draw(surface)
+
+
 class Level(State):
     def __init__(self, game, level_index=1):
         super().__init__(game)
         self.level_index = level_index
         
-        # --- AJUSTE DE ALINHAMENTO DOS BOTÕES ---
-        # Calculamos o centro da tela
         center_x = SCREEN_WIDTH // 2
         center_y = SCREEN_HEIGHT // 2
-        
-        # Espaçamento entre os botões (quanto maior, mais afastados)
         button_gap = 80 
         
-        # Opção Vertical (Um em cima do outro)
         self.restart_btn = Button(center_x, center_y - button_gap, self.game.assets['restart_btn'], 3)
         self.exit_btn = Button(center_x, center_y + button_gap, self.game.assets['exit_btn'], 1)
 
@@ -55,11 +137,14 @@ class Level(State):
                     level_data.append(list(map(int, row)))
         except FileNotFoundError:
             print(f"Erro: Nível {self.level_index} não encontrado.")
-            self.game.running = False
+            self.exit_state()
             return
 
         self.scroll = 0
-        self.level_width = len(level_data[0]) * TILE_SIZE
+        if level_data:
+            self.level_width = len(level_data[0]) * TILE_SIZE
+        else:
+             self.level_width = SCREEN_WIDTH
 
         self.world = World(game)
         groups_dict = {
@@ -74,23 +159,16 @@ class Level(State):
     def update(self, dt, actions):
         if not self.player: return
 
-        # --- Lógica de Game Over ---
         if not self.player.alive_:
-            # Se o player morreu, checa os cliques nos botões
-            if self.restart_btn.draw(self.game.screen): # Truque: verifica clique sem desenhar de verdade no update
-                # Reinicia o nível
+            if self.restart_btn.draw(self.game.screen):
                 self.game.state_stack.pop()
                 new_level = Level(self.game, self.level_index)
                 new_level.enter_state()
             
             if self.exit_btn.draw(self.game.screen):
-                self.game.running = False
-            
-            # Retorna aqui para NÃO atualizar o resto do jogo (congela a tela)
+                self.exit_state() 
             return
-        # ---------------------------
 
-        # Câmera
         if self.player.rect.centerx > SCREEN_WIDTH / 2 and self.player.rect.centerx < (self.level_width - SCREEN_WIDTH / 2):
             self.scroll += (self.player.rect.centerx - self.scroll - SCREEN_WIDTH / 2) * 0.1
         
@@ -111,6 +189,9 @@ class Level(State):
 
     def _check_level_complete(self):
         if pygame.sprite.spritecollide(self.player, self.world.exit_group, False):
+            # SALVA O PROGRESSO
+            save_progress(self.level_index)
+
             self.level_index += 1
             if self.level_index <= MAX_LEVELS:
                 self.game.state_stack.pop() 
@@ -118,8 +199,7 @@ class Level(State):
                 new_level.enter_state()
             else:
                 print("JOGO ZERADO!")
-                # Aqui poderia ir para um menu ou fechar
-                self.game.running = False
+                self.exit_state() 
 
     def _check_collisions(self):
         hits = pygame.sprite.groupcollide(self.enemy_group, self.player_bullet_group, False, True)
@@ -173,11 +253,9 @@ class Level(State):
                 x = 10 + i*15
                 surface.blit(self.game.assets['grenade'], (x, 62))
         
-        # --- Desenha Game Over ---
         if not self.player.alive_:
             self.restart_btn.draw(surface)
             self.exit_btn.draw(surface)
-        # -------------------------
 
         for enemy in self.enemy_group:
             enemy.draw_ui(surface, self.scroll)
