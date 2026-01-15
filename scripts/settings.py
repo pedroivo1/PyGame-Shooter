@@ -1,4 +1,5 @@
-# scripts/settings.py
+#!/usr/bin/env python3
+# Author: https://github.com/pedroivo1
 
 # Screen
 SCREEN_WIDTH = 1500
@@ -37,5 +38,6 @@ GRENADE_BOUNCE = 0.4
 FONT_NAME = 'Futura'
 FONT_SIZE = 32
 
+# Game Infos
 DEBUG = False
 MAX_LEVELS = 10

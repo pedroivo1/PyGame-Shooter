@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Author: https://github.com/pedroivo1
+
 import pygame
 import random
 from abc import ABC
@@ -52,17 +55,13 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
         self.rect.x += dx
         
-        # Colisão Horizontal
         for tile in obstacle_group:
             if tile.rect.colliderect(self.rect):
                 if dx > 0:
                     self.rect.right = tile.rect.left
                 elif dx < 0:
                     self.rect.left = tile.rect.right
-                # Se for inimigo, a IA precisa saber que bateu na parede para virar
-                # Mas faremos isso na lógica de IA do Enemy
 
-        # Pulo e Gravidade
         if actions['jump'] and self.on_ground and not self.pressed_jump:
             self.velocity_y = JUMP_FORCE
             self.on_ground = False
@@ -76,7 +75,6 @@ class Soldier(pygame.sprite.Sprite, ABC):
         dy = self.velocity_y * dt
         self.rect.y += dy
 
-        # Colisão Vertical
         self.on_ground = False 
         for tile in obstacle_group:
             if tile.rect.colliderect(self.rect):
@@ -147,19 +145,15 @@ class Player(Soldier):
         self.health_bar = HealthBar(200, 20, self.max_health, 3)
         self.max_health = 300
 
-    # Atualizado: recebe water_group
     def update(self, dt, actions, obstacle_group, water_group):
         if self.alive_:
             self.move(dt, actions, obstacle_group)
             self.shoot(dt, actions)
             self.throw_grenade(dt, actions)
             
-            # --- CHECAGEM DE MORTE AUTOMÁTICA ---
-            # 1. Caiu no vazio (abaixo do chão)
-            if self.rect.top > SCREEN_HEIGHT + 500: # Margem de segurança
-                self.take_damage(self.max_health) # Mata instantaneamente
+            if self.rect.top > SCREEN_HEIGHT + 500:
+                self.take_damage(self.max_health)
             
-            # 2. Tocou na água
             if pygame.sprite.spritecollide(self, water_group, False):
                 self.take_damage(self.max_health)
 
@@ -227,14 +221,13 @@ class Enemy(Soldier):
         self.back_vision.normalize()
 
         if self.alive_:
-            self.ai(dt, ai_actions, target, obstacle_group) # Passa obstacle_group para IA
+            self.ai(dt, ai_actions, target, obstacle_group)
             self.move(dt, ai_actions, obstacle_group)
             self.shoot(dt, ai_actions)
             
         self.animate(dt, ai_actions)
 
     def ai(self, dt, ai_actions, target, obstacle_group):
-        # 1. Lógica de Patrulha Simples
         self.move_timer += dt
         if self.move_timer > self.t:
             self.move_timer = 0
@@ -247,9 +240,7 @@ class Enemy(Soldier):
                 if should_idle: self.idling = True
                 else: self.facing_right = not self.facing_right
 
-        # --- 2. PREVENÇÃO DE QUEDA (O SENSOR DE ABISMO) ---
         if self.on_ground and not self.idling:
-            # Cria um "retângulo sensor" um pouco à frente e para baixo
             look_ahead_distance = TILE_SIZE // 2
             
             if self.facing_right:
@@ -257,18 +248,15 @@ class Enemy(Soldier):
             else:
                 sensor_rect = pygame.Rect(self.rect.left - 5, self.rect.bottom + 1, 5, 5)
 
-            # Verifica se esse sensor está tocando em algum chão
             ground_exists = False
             for tile in obstacle_group:
                 if tile.rect.colliderect(sensor_rect):
                     ground_exists = True
                     break
             
-            # Se não tem chão, VIRA IMEDIATAMENTE
             if not ground_exists:
                 self.facing_right = not self.facing_right
 
-        # 3. Define as ações de movimento baseado na direção
         if self.idling:
             ai_actions['right'] = False
             ai_actions['left'] = False
@@ -281,7 +269,6 @@ class Enemy(Soldier):
         if not target.alive_:
             return
 
-        # 4. Combate (Sobrescreve patrulha se ver o player)
         if self.front_vision.colliderect(target.rect):
             ai_actions['shoot'] = True
             ai_actions['left'] = False 
@@ -305,7 +292,6 @@ class Enemy(Soldier):
             pygame.draw.rect(surface, (255, 0, 0), f_vis, 2)
             pygame.draw.rect(surface, (0, 0, 255), b_vis, 2)
             
-            # Debug do sensor de chão (opcional, só pra ver onde ele checa)
             if self.alive_ and self.on_ground:
                 if self.facing_right:
                     sens = pygame.Rect(self.rect.right, self.rect.bottom + 1, 5, 5)
@@ -313,6 +299,7 @@ class Enemy(Soldier):
                     sens = pygame.Rect(self.rect.left - 5, self.rect.bottom + 1, 5, 5)
                 sens.x -= scroll
                 pygame.draw.rect(surface, (255, 255, 0), sens)
+
 
 class HealthBar:
     def __init__(self, width, height, max_health, border):

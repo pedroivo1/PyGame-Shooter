@@ -22,7 +22,6 @@ class Game:
         self.actions = {"left": False, "right": False, "jump": False, "grenade": False, "relesed_q": True, "shoot": False}
         self.scale = 1.65
         
-        # Estado do Som
         self.sound_on = True
 
         self.load_assets()
@@ -35,14 +34,11 @@ class Game:
             'restart_btn': load_image('restart_btn.png'),
             'back_btn': load_image('back_btn.png'),
 
-            # Botões de Nível
             'lvl1_btn': load_image('lvl1_btn.png'),
             'lvl2_btn': load_image('lvl2_btn.png'),
             'lvl3_btn': load_image('lvl3_btn.png'),
             
-            # --- CARREGAMENTO DO BACKGROUND ---
             'backgrounds': [], 
-            # ----------------------------------
 
             'tiles': load_images('tiles', self.scale),
 
@@ -70,15 +66,10 @@ class Game:
             'red_run':  load_images('soldiers/red/run', self.scale),
         }
         
-        # --- LOOP DE CARREGAMENTO DO BACKGROUND ---
-        # Carrega as imagens definidas no settings.py
-        # Aplica uma escala para garantir que preencham a altura (opcional, mas recomendado)
         bg_scale = SCREEN_HEIGHT / load_image(f'background/{BACKGROUND_LAYERS[0]}').get_height()
         for bg_name in BACKGROUND_LAYERS:
-            # Usa o seu load_image existente, apontando para a pasta background
             img = load_image(f'background/{bg_name}', bg_scale)
             self.assets['backgrounds'].append(img)
-        # ------------------------------------------
 
         self.sfx = {
             'jump': load_sound('jump.wav', volume=0.5),

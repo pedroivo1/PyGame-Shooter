@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Author: https://github.com/pedroivo1
+
 import pygame
 from ..settings import *
 from ..utils import AnimationManager
@@ -12,22 +15,17 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x, y))
         self.direction = direction
         
-        # Correção do Bug: Vida útil da bala em segundos
-        self.life_time = 2.0 
+        self.life_time = 4.0 
 
     def update(self, dt):
         self.rect.x += (self.direction * self.speed) * dt
         
-        # Mata a bala por tempo, não por posição
         self.life_time -= dt
         if self.life_time <= 0:
             self.kill()
 
 
 class Grenade(pygame.sprite.Sprite):
-    # ... (Manter a classe Grenade igual à anterior) ...
-    # Se certifique de usar a versão que eu mandei no passo anterior, 
-    # com a colisão do obstacle_group!
     def __init__(self, game, x, y, direction, player):
         super().__init__(player.grenade_group)
         self.game = game
@@ -48,7 +46,6 @@ class Grenade(pygame.sprite.Sprite):
             self.kill()
             return
 
-        # Movimento X
         self.rect.x += (self.direction * self.speed) * dt
         for tile in obstacle_group:
             if tile.rect.colliderect(self.rect):
@@ -57,7 +54,6 @@ class Grenade(pygame.sprite.Sprite):
                 self.direction *= -1
                 self.speed *= GRENADE_BOUNCE
 
-        # Movimento Y
         self.velocity_y += GRAVITY * dt
         dy = self.velocity_y * dt
         self.rect.y += dy 
@@ -72,6 +68,7 @@ class Grenade(pygame.sprite.Sprite):
                 elif dy < 0: 
                     self.rect.top = tile.rect.bottom
                     self.velocity_y = 0
+
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, game, x, y, group):

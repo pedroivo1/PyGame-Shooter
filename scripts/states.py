@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+# Author: https://github.com/pedroivo1
+
 import pygame
 import csv
 from abc import ABC, abstractmethod
 from .settings import *
 from .world import World 
 from .utils import Button, load_progress, save_progress
+
 
 class State(ABC):
     def __init__(self, game):
@@ -23,6 +27,7 @@ class State(ABC):
 
     def exit_state(self):
         self.game.state_stack.pop()
+
 
 class MainMenu(State):
     def __init__(self, game):
@@ -116,18 +121,13 @@ class Level(State):
         center_y = SCREEN_HEIGHT // 2
         button_gap = 80 
         
-        # Botões de Game Over
         self.restart_btn = Button(center_x, center_y - button_gap, self.game.assets['restart_btn'], 3)
         self.exit_btn = Button(center_x, center_y + button_gap, self.game.assets['exit_btn'], 1)
 
-        # Botão de Voltar (No topo)
         self.back_btn = Button(20, 25, self.game.assets['back_btn'], 0.6) 
 
-        # --- BOTÃO DE ÁUDIO (Gerado via código para não precisar de asset) ---
-        # Colocado ao lado do botão de voltar (X=70)
         self.audio_btn_on = Button(70, 25, self.create_audio_icon("S", GREEN), 1)
         self.audio_btn_off = Button(70, 25, self.create_audio_icon("M", RED), 1)
-        # ---------------------------------------------------------------------
 
         self.player_bullet_group = pygame.sprite.Group()
         self.enemy_bullet_group = pygame.sprite.Group()
@@ -162,35 +162,28 @@ class Level(State):
         }
         self.player = self.world.process_data(level_data, groups_dict)
 
-    # Cria um ícone quadrado simples para o som
     def create_audio_icon(self, text, color):
         size = 32
         surf = pygame.Surface((size, size))
         surf.fill(BLACK)
-        pygame.draw.rect(surf, color, (0, 0, size, size), 2) # Borda colorida
+        pygame.draw.rect(surf, color, (0, 0, size, size), 2)
         
         text_surf = self.game.font.render(text, True, color)
-        # Escala o texto para caber se necessário, ou usa fonte menor
-        # Aqui assumo que a fonte padrão cabe
         text_rect = text_surf.get_rect(center=(size//2, size//2))
         surf.blit(text_surf, text_rect)
         return surf
 
     def update(self, dt, actions):
-        # Botão Voltar
         if self.back_btn.draw(self.game.screen):
             self.exit_state()
             return
 
-        # --- Lógica do Botão de Som ---
-        # Desenha o botão apropriado dependendo do estado e checa clique
         if self.game.sound_on:
             if self.audio_btn_on.draw(self.game.screen):
                 self.game.toggle_sound()
         else:
             if self.audio_btn_off.draw(self.game.screen):
                 self.game.toggle_sound()
-        # -----------------------------
 
         if not self.player: return
 
@@ -240,25 +233,20 @@ class Level(State):
                 self.exit_state() 
 
     def _check_collisions(self):
-        # --- CORREÇÃO: Balas atravessam inimigos mortos ---
-        # A função collided=... verifica se houve contato E se o inimigo está vivo
         hits = pygame.sprite.groupcollide(
             self.enemy_group, 
             self.player_bullet_group, 
-            False, # Não mata o inimigo aqui (temos lógica de HP)
-            True,  # Mata a bala
+            False,
+            True,
             collided=lambda enemy, bullet: pygame.sprite.collide_rect(enemy, bullet) and enemy.alive_
         )
         
         for enemy in hits:
             enemy.take_damage(25)
-        # --------------------------------------------------
 
         exp_hits = pygame.sprite.groupcollide(self.player.explosion_group, self.enemy_group, False, False)
         for explosion, enemies_hit in exp_hits.items():
             for enemy in enemies_hit:
-                # Explosão acerta inimigos mortos? Geralmente sim (física), mas se quiser tirar:
-                # if enemy.alive_: ...
                 if enemy not in explosion.hit_list:
                     enemy.take_damage(explosion.damage)
                     explosion.hit_list.append(enemy)
@@ -277,7 +265,6 @@ class Level(State):
             surface.blit(sprite.image, (sprite.rect.x - self.scroll, sprite.rect.y))
 
     def draw(self, surface):
-        # Parallax Background
         bg_imgs = self.game.assets['backgrounds']
         for i, img in enumerate(bg_imgs):
             speed = PARALLAX_SPEEDS[i]
@@ -286,18 +273,13 @@ class Level(State):
             rel_scroll = self.scroll * speed
             x_pos = -(rel_scroll % img_w)
             
-            # --- POSIÇÃO Y MANUAL ---
-            # Pega o valor que você definiu no settings.py
-            # Se der erro de índice, usa 0 como padrão
             try:
                 y_pos = BACKGROUND_Y_POSITIONS[i]
             except IndexError:
                 y_pos = 0
             
-            # Desenha com o y_pos manual
             surface.blit(img, (x_pos, y_pos))
             
-            # Desenha a cópia para o loop infinito
             if x_pos + img_w < SCREEN_WIDTH:
                 surface.blit(img, (x_pos + img_w, y_pos))
                 
