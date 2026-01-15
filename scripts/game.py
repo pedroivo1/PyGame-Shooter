@@ -39,6 +39,10 @@ class Game:
             'lvl1_btn': load_image('lvl1_btn.png'),
             'lvl2_btn': load_image('lvl2_btn.png'),
             'lvl3_btn': load_image('lvl3_btn.png'),
+            
+            # --- CARREGAMENTO DO BACKGROUND ---
+            'backgrounds': [], 
+            # ----------------------------------
 
             'tiles': load_images('tiles', self.scale),
 
@@ -65,6 +69,16 @@ class Game:
             'red_jump':  load_images('soldiers/red/jump', self.scale),
             'red_run':  load_images('soldiers/red/run', self.scale),
         }
+        
+        # --- LOOP DE CARREGAMENTO DO BACKGROUND ---
+        # Carrega as imagens definidas no settings.py
+        # Aplica uma escala para garantir que preencham a altura (opcional, mas recomendado)
+        bg_scale = SCREEN_HEIGHT / load_image(f'background/{BACKGROUND_LAYERS[0]}').get_height()
+        for bg_name in BACKGROUND_LAYERS:
+            # Usa o seu load_image existente, apontando para a pasta background
+            img = load_image(f'background/{bg_name}', bg_scale)
+            self.assets['backgrounds'].append(img)
+        # ------------------------------------------
 
         self.sfx = {
             'jump': load_sound('jump.wav', volume=0.5),
@@ -80,16 +94,13 @@ class Game:
         except Exception as e:
             print("Erro ao carregar música:", e)
 
-    # --- NOVO MÉTODO PARA LIGAR/DESLIGAR SOM ---
     def toggle_sound(self):
         self.sound_on = not self.sound_on
         if self.sound_on:
-            # Liga música e sons
             pygame.mixer.music.set_volume(0.3)
             for sound in self.sfx.values():
                 sound.set_volume(0.5) 
         else:
-            # Zera volume (Mute)
             pygame.mixer.music.set_volume(0)
             for sound in self.sfx.values():
                 sound.set_volume(0)

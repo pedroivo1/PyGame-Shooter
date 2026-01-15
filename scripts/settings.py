@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# Author: https://github.com/pedroivo1
+# scripts/settings.py
 
 # Screen
 SCREEN_WIDTH = 1500
@@ -18,6 +17,11 @@ WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 GRAY = (220, 220, 220)
 D_GRAY = (60, 60, 60)
+
+# BACKGROUND
+BACKGROUND_LAYERS = ['sky_cloud.png', 'mountain.png', 'pine1.png', 'pine2.png']
+PARALLAX_SPEEDS = [0.2, 0.4, 0.6, 0.8]
+BACKGROUND_Y_POSITIONS = [0, 200, 350, 480]
 
 # Physics
 GRAVITY = 2600

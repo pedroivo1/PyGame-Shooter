@@ -277,7 +277,31 @@ class Level(State):
             surface.blit(sprite.image, (sprite.rect.x - self.scroll, sprite.rect.y))
 
     def draw(self, surface):
-        surface.fill((144, 201, 120))
+        # Parallax Background
+        bg_imgs = self.game.assets['backgrounds']
+        for i, img in enumerate(bg_imgs):
+            speed = PARALLAX_SPEEDS[i]
+            img_w = img.get_width()
+            
+            rel_scroll = self.scroll * speed
+            x_pos = -(rel_scroll % img_w)
+            
+            # --- POSIÇÃO Y MANUAL ---
+            # Pega o valor que você definiu no settings.py
+            # Se der erro de índice, usa 0 como padrão
+            try:
+                y_pos = BACKGROUND_Y_POSITIONS[i]
+            except IndexError:
+                y_pos = 0
+            
+            # Desenha com o y_pos manual
+            surface.blit(img, (x_pos, y_pos))
+            
+            # Desenha a cópia para o loop infinito
+            if x_pos + img_w < SCREEN_WIDTH:
+                surface.blit(img, (x_pos + img_w, y_pos))
+                
+            self.draw_scrolled(surface, self.world.decoration_group)
         
         self.draw_scrolled(surface, self.world.decoration_group)
         self.draw_scrolled(surface, self.world.water_group)
@@ -303,10 +327,8 @@ class Level(State):
                 x = 10 + i*15
                 surface.blit(self.game.assets['grenade'], (x, 100))
         
-        # Botões da HUD
         self.back_btn.draw(surface)
         
-        # Desenha o botão de som correto
         if self.game.sound_on:
             self.audio_btn_on.draw(surface)
         else:
