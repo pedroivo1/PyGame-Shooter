@@ -135,12 +135,22 @@ class Level(State):
         self.enemy_group = pygame.sprite.Group()
         self.item_box_group = pygame.sprite.Group()
         
+        # --- CARREGAMENTO ROBUSTO DE DADOS ---
         level_data = []
         try:
             with open(f'data/levels/level{self.level_index}_data.csv', newline='') as f:
                 reader = csv.reader(f, delimiter=',')
                 for row in reader:
-                    level_data.append(list(map(int, row)))
+                    # Verifica se a linha tem dados antes de adicionar
+                    if row and len(row) > 0:
+                        level_data.append(list(map(int, row)))
+            
+            # Se o arquivo tiver menos linhas que o esperado, completa com vazio (-1)
+            # Isso evita crash se o CSV estiver corrompido ou incompleto
+            if len(level_data) < ROWS:
+                for _ in range(ROWS - len(level_data)):
+                    level_data.append([-1] * MAX_COLS)
+
         except FileNotFoundError:
             print(f"Erro: Nível {self.level_index} não encontrado.")
             self.exit_state()
@@ -265,6 +275,7 @@ class Level(State):
             surface.blit(sprite.image, (sprite.rect.x - self.scroll, sprite.rect.y))
 
     def draw(self, surface):
+        # 1. Desenha o Background (Loop parallax)
         bg_imgs = self.game.assets['backgrounds']
         for i, img in enumerate(bg_imgs):
             speed = PARALLAX_SPEEDS[i]
@@ -282,23 +293,30 @@ class Level(State):
             
             if x_pos + img_w < SCREEN_WIDTH:
                 surface.blit(img, (x_pos + img_w, y_pos))
-                
-            self.draw_scrolled(surface, self.world.decoration_group)
         
-        self.draw_scrolled(surface, self.world.decoration_group)
+        # 2. Desenha o Mundo (FORA DO LOOP DO BACKGROUND)
+        # Ordem de renderização correta (Z-Index)
+        
+        # Camada de Fundo
+        self.draw_scrolled(surface, self.world.decoration_group) # Grama/Pedras
         self.draw_scrolled(surface, self.world.water_group)
         self.draw_scrolled(surface, self.world.exit_group)
-        self.draw_scrolled(surface, self.world.obstacle_group)
+        
+        # Camada Principal
+        self.draw_scrolled(surface, self.world.obstacle_group) # Paredes/Chão
         self.draw_scrolled(surface, self.item_box_group)
         
-        self.draw_scrolled(surface, self.player_group)
+        # Camada de Entidades
         self.draw_scrolled(surface, self.enemy_group)
+        self.draw_scrolled(surface, self.player_group)
         
+        # Camada de Projéteis/Efeitos
         self.draw_scrolled(surface, self.player_bullet_group)
         self.draw_scrolled(surface, self.player.grenade_group)
         self.draw_scrolled(surface, self.player.explosion_group)
         self.draw_scrolled(surface, self.enemy_bullet_group)
 
+        # 3. UI (Interface)
         if self.player:
             self.player.draw_ui(surface, self.scroll) 
             

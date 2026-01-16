@@ -34,7 +34,9 @@ class Soldier(pygame.sprite.Sprite, ABC):
         }
         self.anim_manager = AnimationManager(self.animations)
         self.image = self.anim_manager.get_image()
-        self.rect = self.image.get_rect(center=(x, y))
+        
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = (x + TILE_SIZE // 2, y + TILE_SIZE)
 
         self.velocity_y = 0
         self.on_ground = False
@@ -55,6 +57,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
 
         self.rect.x += dx
         
+        # Colisão Horizontal
         for tile in obstacle_group:
             if tile.rect.colliderect(self.rect):
                 if dx > 0:
@@ -75,6 +78,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         dy = self.velocity_y * dt
         self.rect.y += dy
 
+        # Colisão Vertical
         self.on_ground = False 
         for tile in obstacle_group:
             if tile.rect.colliderect(self.rect):
@@ -100,8 +104,7 @@ class Soldier(pygame.sprite.Sprite, ABC):
         self.anim_manager.update(dt, loop=self.alive_)
         old_center = self.rect.center
         self.image = pygame.transform.flip(self.anim_manager.get_image(), not self.facing_right, False)
-        self.rect = self.image.get_rect()
-        self.rect.center = old_center
+        self.rect = self.image.get_rect(center=old_center) 
 
         if not self.alive_ and self.anim_manager.frame == len(self.anim_manager.animations['death']) - 1:
             self.death_timer += dt
@@ -116,7 +119,8 @@ class Soldier(pygame.sprite.Sprite, ABC):
             self.ammo -= 1
             self.shoot_cooldown = self.shoot_delay
             
-            offset_x = self.rect.width * self.direction * 0.6
+            # Ajuste fino da saída da bala
+            offset_x = self.rect.width * 0.6 if self.facing_right else -self.rect.width * 0.6
             Bullet(self.game, self.rect.centerx + offset_x, self.rect.centery, self.direction, self.bullet_group)
             self.game.sfx['shot'].play()
 
@@ -151,7 +155,7 @@ class Player(Soldier):
             self.shoot(dt, actions)
             self.throw_grenade(dt, actions)
             
-            if self.rect.top > SCREEN_HEIGHT + 500:
+            if self.rect.top > SCREEN_HEIGHT + 200:
                 self.take_damage(self.max_health)
             
             if pygame.sprite.spritecollide(self, water_group, False):
@@ -216,7 +220,7 @@ class Enemy(Soldier):
             look_dir * TILE_SIZE * 3.2, 
             10
         )
-
+        
         self.front_vision.normalize()
         self.back_vision.normalize()
 

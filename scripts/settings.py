@@ -22,7 +22,7 @@ D_GRAY = (60, 60, 60)
 # BACKGROUND
 BACKGROUND_LAYERS = ['sky_cloud.png', 'mountain.png', 'pine1.png', 'pine2.png']
 PARALLAX_SPEEDS = [0.2, 0.4, 0.6, 0.8]
-BACKGROUND_Y_POSITIONS = [0, 200, 350, 480]
+BACKGROUND_Y_POSITIONS = [0, 100, 250, 280]
 
 # Physics
 GRAVITY = 2600
@@ -41,3 +41,5 @@ FONT_SIZE = 32
 # Game Infos
 DEBUG = False
 MAX_LEVELS = 10
+ROWS = 16
+MAX_COLS = 150

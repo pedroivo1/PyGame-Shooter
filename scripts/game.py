@@ -34,10 +34,6 @@ class Game:
             'restart_btn': load_image('restart_btn.png'),
             'back_btn': load_image('back_btn.png'),
 
-            'lvl1_btn': load_image('lvl1_btn.png'),
-            'lvl2_btn': load_image('lvl2_btn.png'),
-            'lvl3_btn': load_image('lvl3_btn.png'),
-            
             'backgrounds': [], 
 
             'tiles': load_images('tiles', self.scale),
